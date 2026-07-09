@@ -133,6 +133,7 @@ export type Database = {
           linkedin_name: string | null
           linkedin_refresh_token: string | null
           linkedin_urn: string | null
+          onboarded: boolean
           specialty: string | null
           tone: Database["public"]["Enums"]["ai_tone"]
           trial_posts_limit: number
@@ -155,6 +156,7 @@ export type Database = {
           linkedin_name?: string | null
           linkedin_refresh_token?: string | null
           linkedin_urn?: string | null
+          onboarded?: boolean
           specialty?: string | null
           tone?: Database["public"]["Enums"]["ai_tone"]
           trial_posts_limit?: number
@@ -177,6 +179,7 @@ export type Database = {
           linkedin_name?: string | null
           linkedin_refresh_token?: string | null
           linkedin_urn?: string | null
+          onboarded?: boolean
           specialty?: string | null
           tone?: Database["public"]["Enums"]["ai_tone"]
           trial_posts_limit?: number

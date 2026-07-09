@@ -33,6 +33,7 @@ function Dashboard() {
       supabase.from("posts").select("*").eq("user_id", u.user.id).order("created_at", { ascending: false }).limit(5),
       supabase.from("ai_recommendations").select("*").eq("user_id", u.user.id).order("priority", { ascending: false }).limit(6),
     ]);
+    if (p && !(p as any).onboarded) { nav({ to: "/onboarding" }); return; }
     setProfile(p);
     setPosts(ps ?? []);
     setRecs(rs ?? []);

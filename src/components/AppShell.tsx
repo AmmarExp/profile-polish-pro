@@ -15,6 +15,8 @@ import {
   Zap,
   Menu,
   X,
+  BarChart3,
+  Lightbulb,
 } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -41,6 +43,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const items = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard") },
     { to: "/posts", icon: FileText, label: t("nav.posts") },
+    { to: "/insights", icon: BarChart3, label: t("nav.insights") },
+    { to: "/recommendations", icon: Lightbulb, label: t("nav.recs") },
     { to: "/settings", icon: SettingsIcon, label: t("nav.settings") },
     { to: "/billing", icon: CreditCard, label: t("nav.billing") },
     { to: "/linkedin", icon: Linkedin, label: t("nav.linkedin") },

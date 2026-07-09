@@ -199,6 +199,26 @@ export const dict: Dict = {
   "admin.active": { ar: "اشتراكات نشطة", en: "Active subs" },
   "admin.posts.today": { ar: "منشورات اليوم", en: "Posts today" },
   "admin.no.access": { ar: "ليس لديك صلاحية الوصول.", en: "You don't have access." },
+
+  // Onboarding
+  "onb.title": { ar: "أهلاً بك! لنجهّز حسابك", en: "Welcome! Let's set you up" },
+  "onb.subtitle": { ar: "٣ خطوات سريعة ليبدأ الذكاء الاصطناعي بالكتابة عنك.", en: "Three quick steps so AI can start writing for you." },
+  "onb.s1": { ar: "من أنت؟", en: "Who are you?" },
+  "onb.s2": { ar: "تخصصك وهدفك", en: "Your niche & goal" },
+  "onb.s3": { ar: "الأسلوب واللغة", en: "Voice & language" },
+  "onb.finish": { ar: "ابدأ الآن", en: "Get started" },
+
+  // Insights
+  "ins.title": { ar: "تحليلات منشوراتك", en: "Post insights" },
+  "ins.total": { ar: "إجمالي المنشورات", en: "Total posts" },
+  "ins.per14": { ar: "منشورات آخر 14 يوم", en: "Posts (last 14 days)" },
+  "ins.status": { ar: "توزيع الحالات", en: "Status breakdown" },
+  "ins.summary": { ar: "ملخص سريع", en: "Quick summary" },
+  "nav.insights": { ar: "التحليلات", en: "Insights" },
+  "nav.recs": { ar: "التوصيات", en: "Tips" },
+
+  // Recommendations
+  "recs.title": { ar: "توصيات لتحسين ملفك", en: "Profile recommendations" },
 };
 
 type Ctx = {
