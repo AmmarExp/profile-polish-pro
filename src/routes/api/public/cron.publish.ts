@@ -10,9 +10,8 @@ export const Route = createFileRoute("/api/public/cron/publish")({
 });
 
 async function handle(request: Request) {
-  const url = new URL(request.url);
-  const token = url.searchParams.get("token") ?? request.headers.get("x-cron-secret");
-  if (!process.env.CRON_SECRET || token !== process.env.CRON_SECRET) {
+  const apikey = request.headers.get("apikey");
+  if (!apikey || apikey !== process.env.SUPABASE_PUBLISHABLE_KEY) {
     return new Response("Unauthorized", { status: 401 });
   }
 
