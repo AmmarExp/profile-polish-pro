@@ -16,9 +16,6 @@ import {
   ArrowRight,
   Zap,
 } from "lucide-react";
-import heroImg from "@/assets/hero.jpg";
-import beforeAfterImg from "@/assets/before-after.jpg";
-import jobsImg from "@/assets/job-offers.jpg";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -58,18 +55,18 @@ function Landing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-hero">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 md:grid-cols-2 md:py-24 md:items-center">
-          <div>
+        <div className="mx-auto max-w-7xl px-4 py-16 md:py-32">
+          <div className="mx-auto max-w-3xl text-center">
             <Badge className="mb-4 bg-accent/20 text-accent-foreground hover:bg-accent/30 border-0">
               <Sparkles className="me-1 h-3 w-3" /> {t("hero.badge")}
             </Badge>
             <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
               {t("hero.title")}
             </h1>
-            <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+            <p className="mt-5 text-lg text-muted-foreground">
               {t("hero.subtitle")}
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <Link to="/auth">
                 <Button size="lg" className="bg-gradient-primary shadow-soft gap-2">
                   {t("hero.cta")} <Arrow className="h-4 w-4" />
@@ -79,20 +76,10 @@ function Landing() {
                 <Button size="lg" variant="outline">{t("hero.cta2")}</Button>
               </a>
             </div>
-            <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground justify-center">
               <div className="flex items-center gap-1"><Check className="h-4 w-4 text-primary" /> {lang === "ar" ? "بدون بطاقة" : "No card"}</div>
               <div className="flex items-center gap-1"><Check className="h-4 w-4 text-primary" /> {lang === "ar" ? "٣ منشورات مجانية" : "3 free posts"}</div>
             </div>
-          </div>
-          <div className="relative">
-            <div className="absolute -inset-8 bg-gradient-accent opacity-20 blur-3xl" />
-            <img
-              src={heroImg}
-              alt="LinkedIn AI"
-              width={1600}
-              height={1200}
-              className="relative rounded-3xl shadow-glow"
-            />
           </div>
         </div>
       </section>
@@ -125,25 +112,15 @@ function Landing() {
 
       {/* Compare */}
       <section className="bg-secondary/40 py-20">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 md:grid-cols-2 md:items-center">
-          <div>
-            <h2 className="text-3xl font-bold md:text-4xl">{t("compare.title")}</h2>
-            <p className="mt-3 text-muted-foreground">{t("compare.subtitle")}</p>
-            <div className="mt-8 flex items-start gap-4 rounded-2xl bg-background p-5 shadow-soft">
-              <div className="rounded-xl bg-accent/20 p-3">
-                <TrendingUp className="h-5 w-5 text-accent-foreground" />
-              </div>
-              <p className="text-sm leading-relaxed">{t("compare.jobs")}</p>
+        <div className="mx-auto max-w-7xl px-4">
+          <h2 className="text-3xl font-bold md:text-4xl text-center">{t("compare.title")}</h2>
+          <p className="mt-3 text-muted-foreground text-center mx-auto max-w-2xl">{t("compare.subtitle")}</p>
+          <div className="mt-8 flex items-start gap-4 rounded-2xl bg-background p-5 shadow-soft max-w-2xl mx-auto">
+            <div className="rounded-xl bg-accent/20 p-3 flex-shrink-0">
+              <TrendingUp className="h-5 w-5 text-accent-foreground" />
             </div>
+            <p className="text-sm leading-relaxed">{t("compare.jobs")}</p>
           </div>
-          <img
-            src={beforeAfterImg}
-            alt="Before and after"
-            width={1600}
-            height={1000}
-            loading="lazy"
-            className="rounded-3xl shadow-soft"
-          />
         </div>
       </section>
 
@@ -168,23 +145,13 @@ function Landing() {
             </Card>
           ))}
         </div>
-        <div className="mt-16 grid gap-8 md:grid-cols-3 md:items-center">
-          <div className="md:col-span-2">
-            <h3 className="text-2xl font-bold">{lang === "ar" ? "منشورات مستمرة = فرص وظيفية أكثر" : "Consistent posts = more opportunities"}</h3>
-            <p className="mt-3 text-muted-foreground">
-              {lang === "ar"
-                ? "شركات كثيرة توظف عبر لينكدإن أولاً. كل منشور جديد لك يزيد من ظهورك أمام مسؤولي التوظيف."
-                : "Many companies hire on LinkedIn first. Every new post you make puts you in front of more recruiters."}
-            </p>
-          </div>
-          <img
-            src={jobsImg}
-            alt="Job offers"
-            width={1200}
-            height={1400}
-            loading="lazy"
-            className="rounded-3xl shadow-soft"
-          />
+        <div className="mt-16 mx-auto max-w-2xl">
+          <h3 className="text-2xl font-bold text-center">{lang === "ar" ? "منشورات مستمرة = فرص وظيفية أكثر" : "Consistent posts = more opportunities"}</h3>
+          <p className="mt-3 text-muted-foreground text-center">
+            {lang === "ar"
+              ? "شركات كثيرة توظف عبر لينكدإن أولاً. كل منشور جديد لك يزيد من ظهورك أمام مسؤولي التوظيف."
+              : "Many companies hire on LinkedIn first. Every new post you make puts you in front of more recruiters."}
+          </p>
         </div>
       </section>
 
