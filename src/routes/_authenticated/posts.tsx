@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { useI18n } from "@/lib/i18n";
 import { useServerFn } from "@tanstack/react-start";
 import { generatePost } from "@/lib/ai.functions";
+import { publishPostNow } from "@/lib/linkedin.functions";
 import { toast } from "sonner";
-import { Wand2 } from "lucide-react";
+import { Wand2, Send, CalendarClock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/posts")({
   component: PostsPage,

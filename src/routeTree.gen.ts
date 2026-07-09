@@ -18,6 +18,8 @@ import { Route as AuthenticatedLinkedinRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicLinkedinCallbackRouteImport } from './routes/api/public/linkedin.callback'
+import { Route as ApiPublicCronPublishRouteImport } from './routes/api/public/cron.publish'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -63,6 +65,17 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicLinkedinCallbackRoute =
+  ApiPublicLinkedinCallbackRouteImport.update({
+    id: '/api/public/linkedin/callback',
+    path: '/api/public/linkedin/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCronPublishRoute = ApiPublicCronPublishRouteImport.update({
+  id: '/api/public/cron/publish',
+  path: '/api/public/cron/publish',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -73,6 +86,8 @@ export interface FileRoutesByFullPath {
   '/linkedin': typeof AuthenticatedLinkedinRoute
   '/posts': typeof AuthenticatedPostsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -83,6 +98,8 @@ export interface FileRoutesByTo {
   '/linkedin': typeof AuthenticatedLinkedinRoute
   '/posts': typeof AuthenticatedPostsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -95,6 +112,8 @@ export interface FileRoutesById {
   '/_authenticated/linkedin': typeof AuthenticatedLinkedinRoute
   '/_authenticated/posts': typeof AuthenticatedPostsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
+  '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -107,6 +126,8 @@ export interface FileRouteTypes {
     | '/linkedin'
     | '/posts'
     | '/settings'
+    | '/api/public/cron/publish'
+    | '/api/public/linkedin/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -117,6 +138,8 @@ export interface FileRouteTypes {
     | '/linkedin'
     | '/posts'
     | '/settings'
+    | '/api/public/cron/publish'
+    | '/api/public/linkedin/callback'
   id:
     | '__root__'
     | '/'
@@ -128,12 +151,16 @@ export interface FileRouteTypes {
     | '/_authenticated/linkedin'
     | '/_authenticated/posts'
     | '/_authenticated/settings'
+    | '/api/public/cron/publish'
+    | '/api/public/linkedin/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicCronPublishRoute: typeof ApiPublicCronPublishRoute
+  ApiPublicLinkedinCallbackRoute: typeof ApiPublicLinkedinCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -201,6 +228,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/linkedin/callback': {
+      id: '/api/public/linkedin/callback'
+      path: '/api/public/linkedin/callback'
+      fullPath: '/api/public/linkedin/callback'
+      preLoaderRoute: typeof ApiPublicLinkedinCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/publish': {
+      id: '/api/public/cron/publish'
+      path: '/api/public/cron/publish'
+      fullPath: '/api/public/cron/publish'
+      preLoaderRoute: typeof ApiPublicCronPublishRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -229,17 +270,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicCronPublishRoute: ApiPublicCronPublishRoute,
+  ApiPublicLinkedinCallbackRoute: ApiPublicLinkedinCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
