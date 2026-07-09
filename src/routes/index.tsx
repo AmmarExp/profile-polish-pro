@@ -78,7 +78,7 @@ function Landing() {
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-4 text-sm text-muted-foreground justify-center">
               <div className="flex items-center gap-1"><Check className="h-4 w-4 text-primary" /> {lang === "ar" ? "بدون بطاقة" : "No card"}</div>
-              <div className="flex items-center gap-1"><Check className="h-4 w-4 text-primary" /> {lang === "ar" ? "٣ منشورات مجانية" : "3 free posts"}</div>
+              <div className="flex items-center gap-1"><Check className="h-4 w-4 text-primary" /> {lang === "ar" ? "3 منشورات مجانية" : "3 free posts"}</div>
             </div>
           </div>
         </div>
@@ -164,8 +164,8 @@ function Landing() {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               { plan: "free", price: "0", per: "", title: t("price.free.t"), desc: t("price.free.d"), pop: false },
-              { plan: "pro_monthly", price: lang === "ar" ? "٤٩" : "49", per: t("price.month"), title: t("price.pro.t"), desc: t("price.pro.d"), pop: true },
-              { plan: "pro_yearly", price: lang === "ar" ? "٤٩٠" : "490", per: t("price.year"), title: t("price.yearly.t"), desc: t("price.yearly.d"), pop: false },
+              { plan: "pro_monthly", price: "49", per: t("price.month"), title: t("price.pro.t"), desc: t("price.pro.d"), pop: true },
+              { plan: "pro_yearly", price: "490", per: t("price.year"), title: t("price.yearly.t"), desc: t("price.yearly.d"), pop: false },
             ].map((p) => (
               <Card key={p.plan} className={`relative p-6 ${p.pop ? "border-primary shadow-glow" : ""}`}>
                 {p.pop && (
