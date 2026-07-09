@@ -15,6 +15,8 @@ import {
   Zap,
   Menu,
   X,
+  BarChart3,
+  Lightbulb,
 } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
