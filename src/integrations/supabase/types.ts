@@ -47,6 +47,24 @@ export type Database = {
         }
         Relationships: []
       }
+      linkedin_oauth_states: {
+        Row: {
+          created_at: string
+          state: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          state: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          state?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       posts: {
         Row: {
           content: string
@@ -109,7 +127,11 @@ export type Database = {
           id: string
           industry: string | null
           language: string
+          linkedin_access_token: string | null
           linkedin_connected: boolean
+          linkedin_expires_at: string | null
+          linkedin_name: string | null
+          linkedin_refresh_token: string | null
           linkedin_urn: string | null
           specialty: string | null
           tone: Database["public"]["Enums"]["ai_tone"]
@@ -127,7 +149,11 @@ export type Database = {
           id: string
           industry?: string | null
           language?: string
+          linkedin_access_token?: string | null
           linkedin_connected?: boolean
+          linkedin_expires_at?: string | null
+          linkedin_name?: string | null
+          linkedin_refresh_token?: string | null
           linkedin_urn?: string | null
           specialty?: string | null
           tone?: Database["public"]["Enums"]["ai_tone"]
@@ -145,7 +171,11 @@ export type Database = {
           id?: string
           industry?: string | null
           language?: string
+          linkedin_access_token?: string | null
           linkedin_connected?: boolean
+          linkedin_expires_at?: string | null
+          linkedin_name?: string | null
+          linkedin_refresh_token?: string | null
           linkedin_urn?: string | null
           specialty?: string | null
           tone?: Database["public"]["Enums"]["ai_tone"]
