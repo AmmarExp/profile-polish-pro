@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { useI18n } from "@/lib/i18n";
 import { useServerFn } from "@tanstack/react-start";
 import { generatePost } from "@/lib/ai.functions";
+import { publishPostNow } from "@/lib/linkedin.functions";
 import { toast } from "sonner";
-import { Wand2 } from "lucide-react";
+import { Wand2, Send, CalendarClock } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/posts")({
   component: PostsPage,
@@ -21,10 +22,12 @@ export const Route = createFileRoute("/_authenticated/posts")({
 function PostsPage() {
   const { t, lang } = useI18n();
   const generate = useServerFn(generatePost);
+  const publish = useServerFn(publishPostNow);
   const [posts, setPosts] = useState<any[]>([]);
   const [topic, setTopic] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [scheduleAt, setScheduleAt] = useState<Record<string, string>>({});
 
   const load = async () => {
     const { data: u } = await supabase.auth.getUser();
@@ -61,10 +64,21 @@ function PostsPage() {
     else { toast.success(lang === "ar" ? "تم الحفظ" : "Saved"); setContent(""); load(); }
   };
 
-  const setStatus = async (id: string, status: string) => {
-    const patch: any = { status };
-    if (status === "published") patch.published_at = new Date().toISOString();
-    await supabase.from("posts").update(patch).eq("id", id);
+
+  const publishNow = async (id: string) => {
+    try {
+      await publish({ data: { postId: id } });
+      toast.success(lang === "ar" ? "تم النشر على لينكدإن" : "Published to LinkedIn");
+      load();
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const schedule = async (id: string) => {
+    const val = scheduleAt[id];
+    if (!val) { toast.error(lang === "ar" ? "اختر الوقت" : "Pick a time"); return; }
+    const iso = new Date(val).toISOString();
+    await supabase.from("posts").update({ status: "scheduled", scheduled_at: iso }).eq("id", id);
+    toast.success(lang === "ar" ? "تمت الجدولة" : "Scheduled");
     load();
   };
 
@@ -72,6 +86,7 @@ function PostsPage() {
     await supabase.from("posts").delete().eq("id", id);
     load();
   };
+
 
   return (
     <AppShell>
@@ -109,16 +124,32 @@ function PostsPage() {
                 </span>
               </div>
               <p className="whitespace-pre-wrap text-sm">{p.content}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              {p.scheduled_at && p.status === "scheduled" && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {lang === "ar" ? "مجدول:" : "Scheduled:"} {new Date(p.scheduled_at).toLocaleString()}
+                </p>
+              )}
+              {p.error_message && (
+                <p className="mt-2 text-xs text-destructive">{p.error_message}</p>
+              )}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
                 {p.status !== "published" && (
-                  <Button size="sm" variant="outline" onClick={() => setStatus(p.id, "published")}>
-                    {t("posts.publishnow")}
+                  <Button size="sm" onClick={() => publishNow(p.id)} className="bg-[#0A66C2] hover:bg-[#0A66C2]/90 gap-1">
+                    <Send className="h-3 w-3" />{t("posts.publishnow")}
                   </Button>
                 )}
-                {p.status === "draft" && (
-                  <Button size="sm" variant="ghost" onClick={() => setStatus(p.id, "scheduled")}>
-                    {t("posts.schedule")}
-                  </Button>
+                {p.status !== "published" && (
+                  <>
+                    <Input
+                      type="datetime-local"
+                      className="h-8 w-auto text-xs"
+                      value={scheduleAt[p.id] ?? ""}
+                      onChange={(e) => setScheduleAt((s) => ({ ...s, [p.id]: e.target.value }))}
+                    />
+                    <Button size="sm" variant="outline" onClick={() => schedule(p.id)} className="gap-1">
+                      <CalendarClock className="h-3 w-3" />{t("posts.schedule")}
+                    </Button>
+                  </>
                 )}
                 <Button size="sm" variant="ghost" onClick={() => remove(p.id)}>✕</Button>
               </div>

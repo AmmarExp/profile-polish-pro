@@ -1,0 +1,86 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { z } from "zod";
+
+const StartInput = z.object({ origin: z.string().url() });
+
+export const startLinkedInAuth = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => StartInput.parse(v))
+  .handler(async ({ data, context }) => {
+    const { buildAuthUrl } = await import("./linkedin.server");
+    const { supabase, userId } = context;
+    const state = crypto.randomUUID() + "." + crypto.randomUUID();
+    const { error } = await supabase.from("linkedin_oauth_states").insert({ state, user_id: userId });
+    if (error) throw error;
+    const redirectUri = `${data.origin}/api/public/linkedin/callback`;
+    return { url: buildAuthUrl(redirectUri, state), redirectUri };
+  });
+
+export const disconnectLinkedIn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        linkedin_connected: false,
+        linkedin_access_token: null,
+        linkedin_refresh_token: null,
+        linkedin_expires_at: null,
+        linkedin_urn: null,
+        linkedin_name: null,
+      })
+      .eq("id", userId);
+    if (error) throw error;
+    return { ok: true };
+  });
+
+const PublishInput = z.object({ postId: z.string().uuid() });
+
+export const publishPostNow = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => PublishInput.parse(v))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { publishUgcPost } = await import("./linkedin.server");
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("linkedin_access_token, linkedin_urn, linkedin_expires_at")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!profile?.linkedin_access_token || !profile.linkedin_urn) {
+      throw new Error("LinkedIn is not connected");
+    }
+    if (profile.linkedin_expires_at && new Date(profile.linkedin_expires_at) < new Date()) {
+      throw new Error("LinkedIn token expired — please reconnect");
+    }
+
+    const { data: post } = await supabase
+      .from("posts")
+      .select("id, content, user_id")
+      .eq("id", data.postId)
+      .maybeSingle();
+    if (!post || post.user_id !== userId) throw new Error("Post not found");
+
+    try {
+      const liId = await publishUgcPost(profile.linkedin_access_token, profile.linkedin_urn, post.content);
+      await supabase
+        .from("posts")
+        .update({
+          status: "published",
+          published_at: new Date().toISOString(),
+          linkedin_post_id: liId,
+          error_message: null,
+        })
+        .eq("id", post.id);
+      return { ok: true, linkedin_post_id: liId };
+    } catch (e: any) {
+      await supabase
+        .from("posts")
+        .update({ status: "failed", error_message: String(e?.message ?? e) })
+        .eq("id", post.id);
+      throw e;
+    }
+  });
