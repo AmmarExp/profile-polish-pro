@@ -64,12 +64,6 @@ function PostsPage() {
     else { toast.success(lang === "ar" ? "تم الحفظ" : "Saved"); setContent(""); load(); }
   };
 
-  const setStatus = async (id: string, status: string) => {
-    const patch: any = { status };
-    if (status === "published") patch.published_at = new Date().toISOString();
-    await supabase.from("posts").update(patch).eq("id", id);
-    load();
-  };
 
   const publishNow = async (id: string) => {
     try {
