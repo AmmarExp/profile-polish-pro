@@ -43,6 +43,9 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
               linkedin_expires_at: expiresAt,
               linkedin_urn: `urn:li:person:${info.sub}`,
               linkedin_name: info.name ?? null,
+              linkedin_email: info.email ?? null,
+              linkedin_picture: info.picture ?? null,
+              linkedin_synced_at: new Date().toISOString(),
             })
             .eq("id", stateRow.user_id);
 
