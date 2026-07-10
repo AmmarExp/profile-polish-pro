@@ -34,6 +34,11 @@ function LinkedInPage() {
     setProfile(data);
   };
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   useEffect(() => {
     if (search.connected) toast.success(lang === "ar" ? "تم ربط لينكدإن" : "LinkedIn connected");
@@ -101,10 +106,15 @@ function LinkedInPage() {
                 {busy ? "..." : t("li.connect")}
               </Button>
             ) : (
-              <Button onClick={onDisconnect} disabled={busy} variant="outline" className="gap-2">
-                <Unplug className="h-4 w-4" />
-                {lang === "ar" ? "فك الربط" : "Disconnect"}
-              </Button>
+              <>
+                <Button asChild className="bg-[#0A66C2] hover:bg-[#0A66C2]/90 gap-2">
+                  <a href="/linkedin/profile">{lang === "ar" ? "عرض بيانات الملف" : "View profile data"}</a>
+                </Button>
+                <Button onClick={onDisconnect} disabled={busy} variant="outline" className="gap-2">
+                  <Unplug className="h-4 w-4" />
+                  {lang === "ar" ? "فك الربط" : "Disconnect"}
+                </Button>
+              </>
             )}
           </div>
 

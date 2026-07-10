@@ -30,10 +30,43 @@ export const disconnectLinkedIn = createServerFn({ method: "POST" })
         linkedin_expires_at: null,
         linkedin_urn: null,
         linkedin_name: null,
+        linkedin_email: null,
+        linkedin_picture: null,
+        linkedin_headline: null,
+        linkedin_synced_at: null,
       })
       .eq("id", userId);
     if (error) throw error;
     return { ok: true };
+  });
+
+export const syncLinkedInProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { fetchUserInfo } = await import("./linkedin.server");
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("linkedin_access_token, linkedin_expires_at")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!p?.linkedin_access_token) throw new Error("LinkedIn is not connected");
+    if (p.linkedin_expires_at && new Date(p.linkedin_expires_at) < new Date()) {
+      throw new Error("LinkedIn token expired — please reconnect");
+    }
+    const info = await fetchUserInfo(p.linkedin_access_token);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        linkedin_name: info.name ?? null,
+        linkedin_email: info.email ?? null,
+        linkedin_picture: info.picture ?? null,
+        linkedin_urn: `urn:li:person:${info.sub}`,
+        linkedin_synced_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+    if (error) throw error;
+    return { ok: true, info };
   });
 
 const PublishInput = z.object({ postId: z.string().uuid() });
