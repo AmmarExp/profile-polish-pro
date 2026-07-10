@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Linkedin, ExternalLink, Unplug } from "lucide-react";
+import { Linkedin, ExternalLink, Unplug, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { startLinkedInAuth, disconnectLinkedIn } from "@/lib/linkedin.functions";
@@ -99,6 +99,16 @@ function LinkedInPage() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{t("li.desc")}</p>
+
+          {search.error && !connected && (
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                <p className="font-medium">{lang === "ar" ? "فشل الربط" : "Connection failed"}</p>
+                <p className="mt-1 break-words text-destructive/90">{search.error}</p>
+              </div>
+            </div>
+          )}
 
           <div className="mt-4 flex flex-wrap gap-2">
             {!connected || expired ? (
