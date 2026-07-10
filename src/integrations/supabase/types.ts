@@ -129,9 +129,13 @@ export type Database = {
           language: string
           linkedin_access_token: string | null
           linkedin_connected: boolean
+          linkedin_email: string | null
           linkedin_expires_at: string | null
+          linkedin_headline: string | null
           linkedin_name: string | null
+          linkedin_picture: string | null
           linkedin_refresh_token: string | null
+          linkedin_synced_at: string | null
           linkedin_urn: string | null
           onboarded: boolean
           specialty: string | null
@@ -152,9 +156,13 @@ export type Database = {
           language?: string
           linkedin_access_token?: string | null
           linkedin_connected?: boolean
+          linkedin_email?: string | null
           linkedin_expires_at?: string | null
+          linkedin_headline?: string | null
           linkedin_name?: string | null
+          linkedin_picture?: string | null
           linkedin_refresh_token?: string | null
+          linkedin_synced_at?: string | null
           linkedin_urn?: string | null
           onboarded?: boolean
           specialty?: string | null
@@ -175,9 +183,13 @@ export type Database = {
           language?: string
           linkedin_access_token?: string | null
           linkedin_connected?: boolean
+          linkedin_email?: string | null
           linkedin_expires_at?: string | null
+          linkedin_headline?: string | null
           linkedin_name?: string | null
+          linkedin_picture?: string | null
           linkedin_refresh_token?: string | null
+          linkedin_synced_at?: string | null
           linkedin_urn?: string | null
           onboarded?: boolean
           specialty?: string | null
