@@ -44,9 +44,14 @@ function LinkedInPage() {
     setBusy(true);
     try {
       const r = await start({ data: { origin: window.location.origin } });
-      window.location.href = r.url;
+      // LinkedIn refuses to be embedded in iframes (preview). Open at top-level or in a new tab.
+      const opened = window.open(r.url, "_blank", "noopener,noreferrer");
+      if (!opened) {
+        try { window.top!.location.href = r.url; } catch { window.location.href = r.url; }
+      }
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
       setBusy(false);
     }
   };
