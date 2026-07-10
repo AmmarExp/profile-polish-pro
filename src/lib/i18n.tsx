@@ -186,7 +186,7 @@ export const dict: Dict = {
     ar: "ربط لينكدإن سيمكن الذكاء الاصطناعي من النشر تلقائياً بالنيابة عنك. سنقوم بتفعيل الربط في الخطوة القادمة.",
     en: "Connecting LinkedIn lets AI publish on your behalf. We'll wire this up next.",
   },
-  "li.connect": { ar: "ربط الحساب (قريباً)", en: "Connect account (soon)" },
+  "li.connect": { ar: "ربط الحساب", en: "Connect account" },
   "li.simulate": { ar: "محاكاة الربط للاختبار", en: "Simulate connection for testing" },
 
   // Admin
