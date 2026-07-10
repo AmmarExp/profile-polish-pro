@@ -21,6 +21,7 @@ import { Route as AuthenticatedInsightsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedLinkedinProfileRouteImport } from './routes/_authenticated/linkedin.profile'
 import { Route as ApiPublicLinkedinCallbackRouteImport } from './routes/api/public/linkedin.callback'
 import { Route as ApiPublicCronPublishRouteImport } from './routes/api/public/cron.publish'
 
@@ -84,6 +85,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLinkedinProfileRoute =
+  AuthenticatedLinkedinProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedLinkedinRoute,
+  } as any)
 const ApiPublicLinkedinCallbackRoute =
   ApiPublicLinkedinCallbackRouteImport.update({
     id: '/api/public/linkedin/callback',
@@ -103,11 +110,12 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/insights': typeof AuthenticatedInsightsRoute
-  '/linkedin': typeof AuthenticatedLinkedinRoute
+  '/linkedin': typeof AuthenticatedLinkedinRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/posts': typeof AuthenticatedPostsRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/linkedin/profile': typeof AuthenticatedLinkedinProfileRoute
   '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
@@ -118,11 +126,12 @@ export interface FileRoutesByTo {
   '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/insights': typeof AuthenticatedInsightsRoute
-  '/linkedin': typeof AuthenticatedLinkedinRoute
+  '/linkedin': typeof AuthenticatedLinkedinRouteWithChildren
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/posts': typeof AuthenticatedPostsRoute
   '/recommendations': typeof AuthenticatedRecommendationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/linkedin/profile': typeof AuthenticatedLinkedinProfileRoute
   '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
@@ -135,11 +144,12 @@ export interface FileRoutesById {
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/insights': typeof AuthenticatedInsightsRoute
-  '/_authenticated/linkedin': typeof AuthenticatedLinkedinRoute
+  '/_authenticated/linkedin': typeof AuthenticatedLinkedinRouteWithChildren
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/posts': typeof AuthenticatedPostsRoute
   '/_authenticated/recommendations': typeof AuthenticatedRecommendationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/linkedin/profile': typeof AuthenticatedLinkedinProfileRoute
   '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
 }
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/posts'
     | '/recommendations'
     | '/settings'
+    | '/linkedin/profile'
     | '/api/public/cron/publish'
     | '/api/public/linkedin/callback'
   fileRoutesByTo: FileRoutesByTo
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/posts'
     | '/recommendations'
     | '/settings'
+    | '/linkedin/profile'
     | '/api/public/cron/publish'
     | '/api/public/linkedin/callback'
   id:
@@ -188,6 +200,7 @@ export interface FileRouteTypes {
     | '/_authenticated/posts'
     | '/_authenticated/recommendations'
     | '/_authenticated/settings'
+    | '/_authenticated/linkedin/profile'
     | '/api/public/cron/publish'
     | '/api/public/linkedin/callback'
   fileRoutesById: FileRoutesById
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/linkedin/profile': {
+      id: '/_authenticated/linkedin/profile'
+      path: '/profile'
+      fullPath: '/linkedin/profile'
+      preLoaderRoute: typeof AuthenticatedLinkedinProfileRouteImport
+      parentRoute: typeof AuthenticatedLinkedinRoute
+    }
     '/api/public/linkedin/callback': {
       id: '/api/public/linkedin/callback'
       path: '/api/public/linkedin/callback'
@@ -303,12 +323,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedLinkedinRouteChildren {
+  AuthenticatedLinkedinProfileRoute: typeof AuthenticatedLinkedinProfileRoute
+}
+
+const AuthenticatedLinkedinRouteChildren: AuthenticatedLinkedinRouteChildren = {
+  AuthenticatedLinkedinProfileRoute: AuthenticatedLinkedinProfileRoute,
+}
+
+const AuthenticatedLinkedinRouteWithChildren =
+  AuthenticatedLinkedinRoute._addFileChildren(
+    AuthenticatedLinkedinRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedInsightsRoute: typeof AuthenticatedInsightsRoute
-  AuthenticatedLinkedinRoute: typeof AuthenticatedLinkedinRoute
+  AuthenticatedLinkedinRoute: typeof AuthenticatedLinkedinRouteWithChildren
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPostsRoute: typeof AuthenticatedPostsRoute
   AuthenticatedRecommendationsRoute: typeof AuthenticatedRecommendationsRoute
@@ -320,7 +353,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedInsightsRoute: AuthenticatedInsightsRoute,
-  AuthenticatedLinkedinRoute: AuthenticatedLinkedinRoute,
+  AuthenticatedLinkedinRoute: AuthenticatedLinkedinRouteWithChildren,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPostsRoute: AuthenticatedPostsRoute,
   AuthenticatedRecommendationsRoute: AuthenticatedRecommendationsRoute,

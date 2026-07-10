@@ -34,6 +34,11 @@ function LinkedInPage() {
     setProfile(data);
   };
   useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
 
   useEffect(() => {
     if (search.connected) toast.success(lang === "ar" ? "تم ربط لينكدإن" : "LinkedIn connected");
