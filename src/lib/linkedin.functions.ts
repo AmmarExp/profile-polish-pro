@@ -2,6 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
+// Fixed production Lovable callback URL.
+// LinkedIn requires redirect_uri to match byte-for-byte between
+// the authorization request and the token exchange request.
+const LINKEDIN_REDIRECT_URI =
+  "https://link-enhancer-ai.lovable.app/api/public/linkedin/callback";
+
 const StartInput = z.object({ origin: z.string().url() });
 
 export const startLinkedInAuth = createServerFn({ method: "POST" })
@@ -10,15 +16,11 @@ export const startLinkedInAuth = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { buildAuthUrl } = await import("./linkedin.server");
     const { supabase, userId } = context;
-    // Embed the exact browser origin inside the state so the callback can rebuild
-    // the SAME redirect_uri used here. LinkedIn requires the redirect_uri at token
-    // exchange to match the one used at authorization byte-for-byte; behind a proxy
-    // the callback cannot reliably infer the public origin from request headers.
     const nonce = crypto.randomUUID() + "." + crypto.randomUUID();
-    const state = `${nonce}~${encodeURIComponent(data.origin)}`;
+    const state = nonce;
     const { error } = await supabase.from("linkedin_oauth_states").insert({ state, user_id: userId });
     if (error) throw error;
-    const redirectUri = `${data.origin}/api/public/linkedin/callback`;
+    const redirectUri = LINKEDIN_REDIRECT_URI;
     return { url: buildAuthUrl(redirectUri, state), redirectUri };
   });
 

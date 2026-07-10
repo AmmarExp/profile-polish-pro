@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+// Fixed production Lovable callback URL.
+// Must match byte-for-byte the redirect_uri used at authorization.
+const LINKEDIN_REDIRECT_URI =
+  "https://link-enhancer-ai.lovable.app/api/public/linkedin/callback";
+
 export const Route = createFileRoute("/api/public/linkedin/callback")({
   server: {
     handlers: {
@@ -11,16 +16,7 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
         const err = url.searchParams.get("error");
         const errDesc = url.searchParams.get("error_description");
 
-        // Recover the exact browser origin that started the flow from the state.
-        // Falling back to the request origin only if the state is malformed.
-        let origin = url.origin;
-        if (state && state.includes("~")) {
-          try {
-            origin = decodeURIComponent(state.split("~")[1] ?? "") || url.origin;
-          } catch {
-            origin = url.origin;
-          }
-        }
+        const origin = "https://link-enhancer-ai.lovable.app";
 
         const redirectTo = (msg: string, ok = false) =>
           Response.redirect(
@@ -46,29 +42,30 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
           }
           if (!stateRow) return redirectTo("invalid_state");
 
-          // MUST match the redirect_uri used at authorization exactly.
-          const redirectUri = `${origin}/api/public/linkedin/callback`;
+          // Use the fixed redirect URI — must match the one used at authorization.
+          const redirectUri = LINKEDIN_REDIRECT_URI;
           const token = await exchangeCode(code, redirectUri);
           const expiresAt = new Date(Date.now() + token.expires_in * 1000).toISOString();
 
-          // Step 1: persist the connection. This is the critical write — if it
-          // succeeds the account is connected.
+          // Step 1: persist the connection.
           const { error: coreErr } = await supabaseAdmin
             .from("profiles")
-            .update({
-              linkedin_connected: true,
-              linkedin_access_token: token.access_token,
-              linkedin_refresh_token: token.refresh_token ?? null,
-              linkedin_expires_at: expiresAt,
-            })
-            .eq("id", stateRow.user_id);
+            .upsert(
+              {
+                id: stateRow.user_id,
+                linkedin_connected: true,
+                linkedin_access_token: token.access_token,
+                linkedin_refresh_token: token.refresh_token ?? null,
+                linkedin_expires_at: expiresAt,
+              },
+              { onConflict: "id" },
+            );
           if (coreErr) {
-            console.error("[linkedin callback] core profile update failed", coreErr);
+            console.error("[linkedin callback] profile upsert failed", coreErr);
             return redirectTo(coreErr.message ?? "profile_update_failed");
           }
 
-          // Step 2: best-effort enrichment. A failure here must never abort the
-          // connection that already succeeded above.
+          // Step 2: best-effort enrichment.
           try {
             const info = await fetchUserInfo(token.access_token);
             await supabaseAdmin
