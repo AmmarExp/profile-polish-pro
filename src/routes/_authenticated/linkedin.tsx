@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Linkedin, ExternalLink, Unplug } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ function LinkedInPage() {
   const search = useSearch({ from: "/_authenticated/linkedin" });
   const [profile, setProfile] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const start = useServerFn(startLinkedInAuth);
   const disconnect = useServerFn(disconnectLinkedIn);
 
@@ -32,31 +33,86 @@ function LinkedInPage() {
     if (!u.user) return;
     const { data } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
     setProfile(data);
+    return data;
   };
+
   useEffect(() => { load(); }, []);
+
+  // Listen for focus to reload (desktop)
   useEffect(() => {
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
+  // Listen for messages from popup window
   useEffect(() => {
-    if (search.connected) toast.success(lang === "ar" ? "تم ربط لينكدإن" : "LinkedIn connected");
+    const onMessage = (e: MessageEvent) => {
+      if (e.data === "linkedin_connected") {
+        load().then((data) => {
+          if (data?.linkedin_connected) {
+            toast.success(lang === "ar" ? "تم ربط لينكدإن" : "LinkedIn connected");
+          }
+        });
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [lang]);
+
+  useEffect(() => {
+    if (search.connected) {
+      toast.success(lang === "ar" ? "تم ربط لينكدإن" : "LinkedIn connected");
+      load();
+    }
     if (search.error) toast.error((lang === "ar" ? "فشل الربط: " : "Connect failed: ") + search.error);
   }, [search.connected, search.error, lang]);
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
+  const startPolling = () => {
+    stopPolling();
+    let attempts = 0;
+    const maxAttempts = 60; // poll for up to 2 minutes
+    pollingRef.current = setInterval(async () => {
+      attempts++;
+      const data = await load();
+      if (data?.linkedin_connected) {
+        stopPolling();
+        toast.success(lang === "ar" ? "تم ربط لينكدإن بنجاح!" : "LinkedIn connected successfully!");
+        setBusy(false);
+      }
+      if (attempts >= maxAttempts) {
+        stopPolling();
+        setBusy(false);
+      }
+    }, 2000);
+  };
+
+  useEffect(() => () => stopPolling(), []);
 
   const onConnect = async () => {
     setBusy(true);
     try {
       const r = await start({ data: { origin: window.location.origin } });
-      // LinkedIn refuses to be embedded in iframes (preview). Open at top-level or in a new tab.
-      const opened = window.open(r.url, "_blank", "noopener,noreferrer");
-      if (!opened) {
-        try { window.top!.location.href = r.url; } catch { window.location.href = r.url; }
+
+      // Try opening popup first
+      const popup = window.open(r.url, "linkedin_oauth", "width=600,height=700,noopener,noreferrer");
+
+      if (popup) {
+        // Popup opened — start polling for connection status
+        startPolling();
+      } else {
+        // Popup blocked (common on iOS) — redirect same tab
+        window.location.href = r.url;
       }
     } catch (e: any) {
       toast.error(e.message);
-    } finally {
       setBusy(false);
     }
   };
@@ -99,11 +155,17 @@ function LinkedInPage() {
           </div>
           <p className="text-sm text-muted-foreground">{t("li.desc")}</p>
 
+          {busy && !connected && (
+            <p className="mt-2 text-sm text-muted-foreground animate-pulse">
+              {lang === "ar" ? "⏳ في انتظار إتمام الربط..." : "⏳ Waiting for connection..."}
+            </p>
+          )}
+
           <div className="mt-4 flex flex-wrap gap-2">
             {!connected || expired ? (
               <Button onClick={onConnect} disabled={busy} className="bg-[#0A66C2] hover:bg-[#0A66C2]/90 gap-2">
                 <ExternalLink className="h-4 w-4" />
-                {busy ? "..." : t("li.connect")}
+                {busy ? (lang === "ar" ? "جاري الربط..." : "Connecting...") : t("li.connect")}
               </Button>
             ) : (
               <>
