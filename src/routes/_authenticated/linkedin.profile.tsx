@@ -28,7 +28,7 @@ function LinkedInProfilePage() {
   const load = async () => {
     setLoading(true);
     try {
-      const nextStatus = await getStatus({ data: undefined });
+      const nextStatus = await getStatus();
       setStatus(nextStatus);
       setStats(nextStatus.stats);
       setError(null);

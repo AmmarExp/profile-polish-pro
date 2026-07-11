@@ -32,7 +32,7 @@ function LinkedInPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const nextStatus = await getStatus({ data: undefined });
+      const nextStatus = await getStatus();
       setStatus(nextStatus);
       if (nextStatus.connected) setLastError(null);
     } catch (e: any) {
