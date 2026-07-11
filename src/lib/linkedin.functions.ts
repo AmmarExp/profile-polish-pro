@@ -2,12 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-// Fixed production Lovable callback URL.
-// LinkedIn requires redirect_uri to match byte-for-byte between
-// the authorization request and the token exchange request.
-const LINKEDIN_REDIRECT_URI =
-  "https://link-enhancer-ai.lovable.app/api/public/linkedin/callback";
-
 const StartInput = z.object({ origin: z.string().url() });
 
 export type LinkedInStatus = {
