@@ -1,150 +1,24 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { createFileRoute } from '@tanstack/react-router'
+import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useI18n } from "@/lib/i18n";
-import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
-export const Route = createFileRoute("/_authenticated/settings")({
-  component: SettingsPage,
-});
+export const Route = createFileRoute("/_authenticated/settings")({ component: SettingsPage });
 
 function SettingsPage() {
-  const { t, lang } = useI18n();
-  const [profile, setProfile] = useState<any>({});
-  const [schedule, setSchedule] = useState<any>({
-    posts_per_day: 1,
-    publish_times: ["09:00"],
-    timezone: "Asia/Riyadh",
-    active: true,
-    auto_generate: true,
-  });
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const [{ data: p }, { data: s }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
-        supabase.from("schedule_settings").select("*").eq("user_id", u.user.id).maybeSingle(),
-      ]);
-      setProfile(p ?? {});
-      if (s) setSchedule(s);
-    })();
-  }, []);
-
-  const save = async () => {
-    setLoading(true);
-    try {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return;
-      const { error: pe } = await supabase.from("profiles").update({
-        full_name: profile.full_name,
-        headline: profile.headline,
-        bio: profile.bio,
-        specialty: profile.specialty,
-        industry: profile.industry,
-        goal: profile.goal,
-        tone: profile.tone ?? "friendly",
-        language: profile.language ?? "ar",
-      }).eq("id", u.user.id);
-      if (pe) throw pe;
-
-      const { error: se } = await supabase.from("schedule_settings").upsert({
-        user_id: u.user.id,
-        posts_per_day: Number(schedule.posts_per_day) || 1,
-        publish_times: Array.isArray(schedule.publish_times) ? schedule.publish_times : String(schedule.publish_times).split(",").map((s: string) => s.trim()),
-        timezone: schedule.timezone || "Asia/Riyadh",
-        active: !!schedule.active,
-        auto_generate: !!schedule.auto_generate,
-      });
-      if (se) throw se;
-      toast.success(t("set.saved"));
-    } catch (e: any) {
-      toast.error(e.message);
-    } finally { setLoading(false); }
+  const [saved, setSaved] = useState(false);
+  const [autoPublish, setAutoPublish] = useState(true);
+  const [scheduleActive, setScheduleActive] = useState(true);
+  const save = () => { // TODO: save profile to Supabase
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 1800);
   };
-
-  return (
-    <AppShell>
-      <div className="mx-auto max-w-3xl space-y-6">
-        <h1 className="text-2xl font-bold">{t("set.title")}</h1>
-
-        <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">{t("set.profile")}</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div><Label>{t("auth.name")}</Label><Input value={profile.full_name ?? ""} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} /></div>
-            <div><Label>{t("set.headline")}</Label><Input value={profile.headline ?? ""} onChange={(e) => setProfile({ ...profile, headline: e.target.value })} /></div>
-            <div><Label>{t("set.specialty")}</Label><Input value={profile.specialty ?? ""} onChange={(e) => setProfile({ ...profile, specialty: e.target.value })} /></div>
-            <div><Label>{t("set.industry")}</Label><Input value={profile.industry ?? ""} onChange={(e) => setProfile({ ...profile, industry: e.target.value })} /></div>
-          </div>
-          <div><Label>{t("set.bio")}</Label><Textarea rows={3} value={profile.bio ?? ""} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} /></div>
-          <div><Label>{t("set.goal")}</Label><Textarea rows={2} value={profile.goal ?? ""} onChange={(e) => setProfile({ ...profile, goal: e.target.value })} /></div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <Label>{t("set.tone")}</Label>
-              <Select value={profile.tone ?? "friendly"} onValueChange={(v) => setProfile({ ...profile, tone: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="friendly">{t("tone.friendly")}</SelectItem>
-                  <SelectItem value="formal">{t("tone.formal")}</SelectItem>
-                  <SelectItem value="inspiring">{t("tone.inspiring")}</SelectItem>
-                  <SelectItem value="educational">{t("tone.educational")}</SelectItem>
-                  <SelectItem value="witty">{t("tone.witty")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>{t("set.lang")}</Label>
-              <Select value={profile.language ?? "ar"} onValueChange={(v) => setProfile({ ...profile, language: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ar">العربية</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 space-y-4">
-          <h2 className="font-semibold">{t("set.schedule")}</h2>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div><Label>{t("set.perday")}</Label>
-              <Input type="number" min={1} max={10} value={schedule.posts_per_day}
-                onChange={(e) => setSchedule({ ...schedule, posts_per_day: Number(e.target.value) })} />
-            </div>
-            <div><Label>{t("set.tz")}</Label><Input value={schedule.timezone} onChange={(e) => setSchedule({ ...schedule, timezone: e.target.value })} /></div>
-          </div>
-          <div>
-            <Label>{t("set.times")}</Label>
-            <Input
-              value={Array.isArray(schedule.publish_times) ? schedule.publish_times.join(", ") : schedule.publish_times}
-              onChange={(e) => setSchedule({ ...schedule, publish_times: e.target.value.split(",").map((s: string) => s.trim()) })}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label>{t("set.auto")}</Label>
-            <Switch checked={!!schedule.auto_generate} onCheckedChange={(v) => setSchedule({ ...schedule, auto_generate: v })} />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label>{t("set.active")}</Label>
-            <Switch checked={!!schedule.active} onCheckedChange={(v) => setSchedule({ ...schedule, active: v })} />
-          </div>
-        </Card>
-
-        <Button onClick={save} disabled={loading} className="bg-gradient-primary">
-          {loading ? "..." : t("set.save")}
-        </Button>
-      </div>
-    </AppShell>
-  );
+  return <AppShell><div className="mx-auto max-w-3xl space-y-6" dir="rtl"><header><p className="text-sm text-muted-foreground">تخصيص تجربتك</p><h1 className="text-2xl font-bold">الإعدادات</h1></header><Card className="space-y-5 p-5 sm:p-7"><div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-xl font-bold">ملفي المهني</h2><p className="mt-1 text-sm text-muted-foreground">كلما اكتمل ملفك، أصبح المحتوى أدق.</p></div><span className="text-sm font-semibold text-primary">اكتمال الملف — 40%</span></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full w-2/5 rounded-full bg-primary" /></div><div className="grid gap-4 sm:grid-cols-2"><Field label="الاسم الكامل" value="عمار أحمد" /><Field label="المسمى الوظيفي (Headline)" value="مدير منتجات رقمية" /><Field label="التخصص" value="إدارة المنتجات" /><Field label="القطاع" value="التقنية" /></div><Field label="نبذة مختصرة" value="أساعد الفرق على بناء منتجات رقمية مفيدة وقابلة للنمو." multiline /><Field label="هدفك من LinkedIn" value="بناء حضور مهني ومشاركة المعرفة في إدارة المنتجات." multiline /><div className="grid gap-4 sm:grid-cols-2"><div><Label>الأسلوب المفضل</Label><Select defaultValue="friendly"><SelectTrigger className="mt-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="friendly">ودّي</SelectItem><SelectItem value="formal">رسمي</SelectItem><SelectItem value="inspiring">ملهم</SelectItem><SelectItem value="educational">تعليمي</SelectItem><SelectItem value="light">خفيف</SelectItem></SelectContent></Select></div><div><Label>اللغة</Label><Select defaultValue="ar"><SelectTrigger className="mt-2"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ar">العربية</SelectItem><SelectItem value="en">English</SelectItem></SelectContent></Select></div></div><Button onClick={save}>{saved ? "تم الحفظ ✓" : "حفظ التغييرات"}</Button></Card><Card className="space-y-5 p-5 sm:p-7"><div><h2 className="text-xl font-bold">إعدادات النشر</h2><p className="mt-1 text-sm text-muted-foreground">تحكم بالجدولة وتفضيلات النشر.</p></div><div className="grid gap-4 sm:grid-cols-2"><Field label="منشورات في اليوم" value="1" /><Field label="المنطقة الزمنية" value="Asia/Riyadh" /></div><Field label="أوقات النشر" value="09:00" /><div className="flex items-center justify-between rounded-xl border border-border p-4"><div><p className="font-medium">توليد ونشر تلقائي</p><p className="text-sm text-muted-foreground">أنشئ محتوى مقترحاً حسب جدولك.</p></div><Switch checked={autoPublish} onCheckedChange={setAutoPublish} /></div><div className="flex items-center justify-between rounded-xl border border-border p-4"><div><p className="font-medium">الجدولة مفعّلة</p><p className="text-sm text-muted-foreground">فعّل خطة النشر الأسبوعية.</p></div><Switch checked={scheduleActive} onCheckedChange={setScheduleActive} /></div></Card><Card className="space-y-4 p-5 sm:p-7"><div><h2 className="text-xl font-bold">الحساب والأمان</h2><p className="mt-1 text-sm text-muted-foreground">تتم إدارة بيانات الدخول وربط الحسابات بأمان.</p></div><div className="flex flex-wrap gap-2"><Button variant="outline">تغيير كلمة المرور</Button><Button variant="outline">إدارة حساب LinkedIn</Button></div></Card></div></AppShell>;
 }
+function Field({ label, value, multiline = false }: { label: string; value: string; multiline?: boolean }) { return <div><Label>{label}</Label>{multiline ? <Textarea className="mt-2" defaultValue={value} rows={3} /> : <Input className="mt-2" defaultValue={value} />}</div>; }

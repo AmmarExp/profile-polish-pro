@@ -5,50 +5,33 @@ import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import {
-  LayoutDashboard,
+  CalendarDays,
   FileText,
-  Settings as SettingsIcon,
-  CreditCard,
+  Home,
   Linkedin,
-  ShieldCheck,
   LogOut,
-  Zap,
   Menu,
+  PenLine,
+  Settings as SettingsIcon,
+  Wrench,
   X,
-  BarChart3,
-  Lightbulb,
+  Zap,
 } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
   const nav = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return;
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userData.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      setIsAdmin(!!data);
-    })();
-  }, []);
-
   const items = [
-    { to: "/dashboard", icon: LayoutDashboard, label: t("nav.dashboard") },
-    { to: "/posts", icon: FileText, label: t("nav.posts") },
-    { to: "/insights", icon: BarChart3, label: t("nav.insights") },
-    { to: "/recommendations", icon: Lightbulb, label: t("nav.recs") },
-    { to: "/settings", icon: SettingsIcon, label: t("nav.settings") },
-    { to: "/billing", icon: CreditCard, label: t("nav.billing") },
-    { to: "/linkedin", icon: Linkedin, label: t("nav.linkedin") },
-    ...(isAdmin ? [{ to: "/admin", icon: ShieldCheck, label: t("nav.admin") }] : []),
+    { to: "/dashboard", icon: Home, label: "الرئيسية" },
+    { to: "/posts/new", icon: PenLine, label: "كتابة منشور" },
+    { to: "/posts", icon: FileText, label: "منشوراتي" },
+    { to: "/planner", icon: CalendarDays, label: "خطة الأسبوع" },
+    { to: "/tools", icon: Wrench, label: "أدوات الكتابة" },
+    { to: "/linkedin", icon: Linkedin, label: "LinkedIn" },
+    { to: "/settings", icon: SettingsIcon, label: "الإعدادات" },
   ] as const;
 
   const logout = async () => {
