@@ -10,6 +10,20 @@ const LINKEDIN_REDIRECT_URI =
 
 const StartInput = z.object({ origin: z.string().url() });
 
+export type LinkedInStatus = {
+  connected: boolean;
+  expired: boolean;
+  expiresAt: string | null;
+  name: string | null;
+  email: string | null;
+  picture: string | null;
+  headline: string | null;
+  urn: string | null;
+  syncedAt: string | null;
+  stats: { published: number; scheduled: number; drafts: number; failed: number };
+  missingProfile: boolean;
+};
+
 export const getLinkedInStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -58,7 +72,7 @@ export const getLinkedInStatus = createServerFn({ method: "GET" })
       syncedAt: profile?.linkedin_synced_at ?? null,
       stats,
       missingProfile: !profile,
-    };
+    } satisfies LinkedInStatus;
   });
 
 export const startLinkedInAuth = createServerFn({ method: "POST" })

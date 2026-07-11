@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { Linkedin, ExternalLink, Unplug, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { getLinkedInStatus, startLinkedInAuth, disconnectLinkedIn } from "@/lib/linkedin.functions";
+import { getLinkedInStatus, startLinkedInAuth, disconnectLinkedIn, type LinkedInStatus } from "@/lib/linkedin.functions";
 
 export const Route = createFileRoute("/_authenticated/linkedin")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/linkedin")({
 function LinkedInPage() {
   const { t, lang } = useI18n();
   const search = useSearch({ from: "/_authenticated/linkedin" });
-  const [status, setStatus] = useState<Awaited<ReturnType<typeof getLinkedInStatus>> | null>(null);
+  const [status, setStatus] = useState<LinkedInStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);

@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n";
 import { RefreshCw, Mail, Linkedin, ExternalLink, FileText, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { getLinkedInStatus, syncLinkedInProfile } from "@/lib/linkedin.functions";
+import { getLinkedInStatus, syncLinkedInProfile, type LinkedInStatus } from "@/lib/linkedin.functions";
 
 export const Route = createFileRoute("/_authenticated/linkedin/profile")({
   component: LinkedInProfilePage,
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/linkedin/profile")({
 function LinkedInProfilePage() {
   const { lang } = useI18n();
   const ar = lang === "ar";
-  const [status, setStatus] = useState<Awaited<ReturnType<typeof getLinkedInStatus>> | null>(null);
+  const [status, setStatus] = useState<LinkedInStatus | null>(null);
   const [stats, setStats] = useState({ published: 0, scheduled: 0, drafts: 0, failed: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
