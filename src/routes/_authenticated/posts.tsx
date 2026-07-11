@@ -1,162 +1,29 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { createFileRoute } from '@tanstack/react-router'
 import { AppShell } from "@/components/AppShell";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useI18n } from "@/lib/i18n";
-import { useServerFn } from "@tanstack/react-start";
-import { generatePost } from "@/lib/ai.functions";
-import { publishPostNow } from "@/lib/linkedin.functions";
-import { toast } from "sonner";
-import { Wand2, Send, CalendarClock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ExternalLink, FilePlus2, Pencil, Send, Trash2 } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/posts")({
-  component: PostsPage,
-});
+export const Route = createFileRoute("/_authenticated/posts")({ component: PostsPage });
+
+const posts = {
+  drafts: [{ content: "أحياناً يكون أفضل قرار مهني هو التوقف قليلاً للتفكير في الاتجاه، وليس فقط الاستمرار في السرعة. هذه ثلاثة أسئلة تساعدني على إعادة ترتيب أولوياتي...", date: "اليوم، 10:30 ص", status: "مسودة" }],
+  scheduled: [{ content: "مشاركة المعرفة مع الفريق ليست مجرد مهمة إضافية، بل استثمار مستمر في الثقة والنتائج. إليكم الطريقة التي جعلت الاجتماعات الأسبوعية أكثر فاعلية...", date: "18 يوليو 2026، 9:00 ص", status: "مجدول" }],
+  published: [{ content: "كل نجاح صغير يستحق أن نتوقف عنده. ليس لأنه نهاية الطريق، بل لأنه تذكير جميل بأن الخطوات اليومية تصنع فرقاً حقيقياً مع الوقت...", date: "14 يوليو 2026", status: "منشور" }],
+  failed: [{ content: "فكرة اليوم: كيف يمكننا بناء ثقافة عمل تشجع الناس على طرح الأسئلة قبل تقديم الإجابات؟ هذه بعض الدروس التي تعلمتها...", date: "13 يوليو 2026", status: "فشل" }],
+};
 
 function PostsPage() {
-  const { t, lang } = useI18n();
-  const generate = useServerFn(generatePost);
-  const publish = useServerFn(publishPostNow);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [topic, setTopic] = useState("");
-  const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [scheduleAt, setScheduleAt] = useState<Record<string, string>>({});
-
-  const load = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { data } = await supabase
-      .from("posts")
-      .select("*")
-      .eq("user_id", u.user.id)
-      .order("created_at", { ascending: false });
-    setPosts(data ?? []);
-  };
-  useEffect(() => { load(); }, []);
-
-  const doGenerate = async () => {
-    setLoading(true);
-    try {
-      const p = await generate({ data: { topic } });
-      setContent(p?.content ?? "");
-      toast.success(lang === "ar" ? "تم التوليد" : "Generated");
-      load();
-    } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
-  };
-
-  const saveManual = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user || !content.trim()) return;
-    const { error } = await supabase.from("posts").insert({
-      user_id: u.user.id,
-      content,
-      source: "manual",
-      status: "draft",
-    });
-    if (error) toast.error(error.message);
-    else { toast.success(lang === "ar" ? "تم الحفظ" : "Saved"); setContent(""); load(); }
-  };
-
-
-  const publishNow = async (id: string) => {
-    try {
-      await publish({ data: { postId: id } });
-      toast.success(lang === "ar" ? "تم النشر على لينكدإن" : "Published to LinkedIn");
-      load();
-    } catch (e: any) { toast.error(e.message); }
-  };
-
-  const schedule = async (id: string) => {
-    const val = scheduleAt[id];
-    if (!val) { toast.error(lang === "ar" ? "اختر الوقت" : "Pick a time"); return; }
-    const iso = new Date(val).toISOString();
-    await supabase.from("posts").update({ status: "scheduled", scheduled_at: iso }).eq("id", id);
-    toast.success(lang === "ar" ? "تمت الجدولة" : "Scheduled");
-    load();
-  };
-
-  const remove = async (id: string) => {
-    await supabase.from("posts").delete().eq("id", id);
-    load();
-  };
-
-
-  return (
-    <AppShell>
-      <div className="mx-auto max-w-4xl space-y-6">
-        <h1 className="text-2xl font-bold">{t("posts.title")}</h1>
-
-        <Card className="p-5 space-y-4">
-          <h2 className="font-semibold">{t("posts.new")}</h2>
-          <div className="flex gap-2">
-            <Input
-              placeholder={t("posts.topic")}
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-            />
-            <Button onClick={doGenerate} disabled={loading} className="bg-gradient-primary gap-2 shrink-0">
-              <Wand2 className="h-4 w-4" />{loading ? "..." : t("posts.generate")}
-            </Button>
-          </div>
-          <div>
-            <Label>{t("posts.content")}</Label>
-            <Textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)} />
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={saveManual} variant="outline">{t("posts.save")}</Button>
-          </div>
-        </Card>
-
-        <div className="space-y-3">
-          {posts.map((p) => (
-            <Card key={p.id} className="p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <Badge variant="secondary">{t(`posts.status.${p.status}` as any)}</Badge>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(p.created_at).toLocaleString()}
-                </span>
-              </div>
-              <p className="whitespace-pre-wrap text-sm">{p.content}</p>
-              {p.scheduled_at && p.status === "scheduled" && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {lang === "ar" ? "مجدول:" : "Scheduled:"} {new Date(p.scheduled_at).toLocaleString()}
-                </p>
-              )}
-              {p.error_message && (
-                <p className="mt-2 text-xs text-destructive">{p.error_message}</p>
-              )}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {p.status !== "published" && (
-                  <Button size="sm" onClick={() => publishNow(p.id)} className="bg-[#0A66C2] hover:bg-[#0A66C2]/90 gap-1">
-                    <Send className="h-3 w-3" />{t("posts.publishnow")}
-                  </Button>
-                )}
-                {p.status !== "published" && (
-                  <>
-                    <Input
-                      type="datetime-local"
-                      className="h-8 w-auto text-xs"
-                      value={scheduleAt[p.id] ?? ""}
-                      onChange={(e) => setScheduleAt((s) => ({ ...s, [p.id]: e.target.value }))}
-                    />
-                    <Button size="sm" variant="outline" onClick={() => schedule(p.id)} className="gap-1">
-                      <CalendarClock className="h-3 w-3" />{t("posts.schedule")}
-                    </Button>
-                  </>
-                )}
-                <Button size="sm" variant="ghost" onClick={() => remove(p.id)}>✕</Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    </AppShell>
-  );
+  return <AppShell><div className="mx-auto max-w-4xl space-y-6" dir="rtl">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm text-muted-foreground">إدارة المحتوى</p><h1 className="text-2xl font-bold">منشوراتي</h1></div><Button asChild className="gap-2"><Link to="/posts/new"><FilePlus2 className="h-4 w-4" />كتابة منشور جديد</Link></Button></div>
+    <Tabs defaultValue="drafts"><TabsList className="grid h-auto w-full grid-cols-4"><TabsTrigger value="drafts">المسودات</TabsTrigger><TabsTrigger value="scheduled">المجدولة</TabsTrigger><TabsTrigger value="published">المنشورة</TabsTrigger><TabsTrigger value="failed">الفاشلة</TabsTrigger></TabsList>{Object.entries(posts).map(([key, records]) => <TabsContent key={key} value={key} className="space-y-3 pt-3">{records.length ? records.map((post) => <PostCard key={post.date} {...post} kind={key} />) : <EmptyState />}</TabsContent>)}</Tabs>
+  </div></AppShell>;
 }
+
+function PostCard({ content, date, status, kind }: { content: string; date: string; status: string; kind: string }) {
+  const tone = kind === "failed" ? "bg-destructive/10 text-destructive" : kind === "published" ? "bg-emerald-500/10 text-emerald-700" : kind === "scheduled" ? "bg-primary/10 text-primary" : "bg-amber-500/10 text-amber-700";
+  return <Card className="p-5"><div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Badge className={tone}>{status}</Badge><span className="text-xs text-muted-foreground">{date}</span></div>{kind === "scheduled" && <span className="text-xs font-medium text-primary">ينشر خلال 3 ساعات</span>}</div><p className="line-clamp-3 text-sm leading-7">{content}</p>{kind === "failed" && <p className="mt-3 text-sm text-destructive">فشل الاتصال بـ LinkedIn</p>}{kind === "published" && <a href="#" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[#0A66C2]">عرض على LinkedIn <ExternalLink className="h-3.5 w-3.5" /></a>}<div className="mt-4 flex flex-wrap gap-2"><Button size="sm" variant="outline"><Pencil className="h-3.5 w-3.5" /> تعديل</Button><Button size="sm" variant="outline"><Send className="h-3.5 w-3.5" /> نشر الآن</Button><Button size="sm" variant="ghost" className="text-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /> حذف</Button></div></Card>;
+}
+function EmptyState() { return <Card className="p-12 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-2xl">📝</div><p className="font-medium">لا توجد منشورات هنا بعد</p><p className="mt-1 text-sm text-muted-foreground">ابدأ بكتابة منشورك التالي.</p></Card>; }
