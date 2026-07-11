@@ -16,7 +16,28 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
         const err = url.searchParams.get("error");
         const errDesc = url.searchParams.get("error_description");
 
-        const origin = "https://link-enhancer-ai.lovable.app";
+        // Decode the originating app origin from state so we can send the
+        // user back to the same environment they started from (e.g. preview).
+        const decodeOrigin = (s: string | null): string => {
+          const fallback = "https://link-enhancer-ai.lovable.app";
+          if (!s) return fallback;
+          const part = s.split(".")[1];
+          if (!part) return fallback;
+          try {
+            const b64 = part.replace(/-/g, "+").replace(/_/g, "/");
+            const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+            const decoded = atob(padded);
+            const u = new URL(decoded);
+            // Only allow lovable hosts.
+            if (u.hostname.endsWith(".lovable.app") || u.hostname.endsWith(".lovableproject.com")) {
+              return u.origin;
+            }
+            return fallback;
+          } catch {
+            return fallback;
+          }
+        };
+        const origin = decodeOrigin(state);
 
         const redirectTo = (msg: string, ok = false) =>
           Response.redirect(
