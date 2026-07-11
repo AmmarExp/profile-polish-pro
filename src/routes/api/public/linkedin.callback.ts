@@ -67,29 +67,41 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
           const redirectUri = LINKEDIN_REDIRECT_URI;
           const token = await exchangeCode(code, redirectUri);
           const expiresAt = new Date(Date.now() + token.expires_in * 1000).toISOString();
+          const nowIso = new Date().toISOString();
 
           // Step 1: persist the connection.
-          const { error: coreErr } = await supabaseAdmin
+          const connectionPayload = {
+            linkedin_connected: true,
+            linkedin_access_token: token.access_token,
+            linkedin_refresh_token: token.refresh_token ?? null,
+            linkedin_expires_at: expiresAt,
+            updated_at: nowIso,
+          };
+
+          const { data: updatedProfile, error: coreErr } = await supabaseAdmin
             .from("profiles")
-            .upsert(
-              {
-                id: stateRow.user_id,
-                linkedin_connected: true,
-                linkedin_access_token: token.access_token,
-                linkedin_refresh_token: token.refresh_token ?? null,
-                linkedin_expires_at: expiresAt,
-              },
-              { onConflict: "id" },
-            );
+            .update(connectionPayload)
+            .eq("id", stateRow.user_id)
+            .select("id")
+            .maybeSingle();
           if (coreErr) {
-            console.error("[linkedin callback] profile upsert failed", coreErr);
+            console.error("[linkedin callback] profile update failed", coreErr);
             return redirectTo(coreErr.message ?? "profile_update_failed");
+          }
+          if (!updatedProfile) {
+            const { error: insertErr } = await supabaseAdmin
+              .from("profiles")
+              .insert({ id: stateRow.user_id, ...connectionPayload });
+            if (insertErr) {
+              console.error("[linkedin callback] profile insert failed", insertErr);
+              return redirectTo(insertErr.message ?? "profile_insert_failed");
+            }
           }
 
           // Step 2: best-effort enrichment.
           try {
             const info = await fetchUserInfo(token.access_token);
-            await supabaseAdmin
+            const { error: enrichUpdateErr } = await supabaseAdmin
               .from("profiles")
               .update({
                 linkedin_urn: info.sub ? `urn:li:person:${info.sub}` : null,
@@ -97,13 +109,17 @@ export const Route = createFileRoute("/api/public/linkedin/callback")({
                 linkedin_email: info.email ?? null,
                 linkedin_picture: info.picture ?? null,
                 linkedin_synced_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
               })
               .eq("id", stateRow.user_id);
+            if (enrichUpdateErr) {
+              console.error("[linkedin callback] profile enrichment update failed", enrichUpdateErr);
+            }
           } catch (enrichErr) {
             console.error("[linkedin callback] profile enrichment skipped", enrichErr);
           }
 
-          await supabaseAdmin.from("linkedin_oauth_states").delete().eq("state", state);
+          await supabaseAdmin.from("linkedin_oauth_states").delete().eq("user_id", stateRow.user_id);
           return redirectTo("1", true);
         } catch (e: any) {
           console.error("[linkedin callback]", e);

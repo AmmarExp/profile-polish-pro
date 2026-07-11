@@ -5,11 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Linkedin, ExternalLink, Unplug, AlertCircle } from "lucide-react";
+import { Linkedin, ExternalLink, Unplug, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { startLinkedInAuth, disconnectLinkedIn } from "@/lib/linkedin.functions";
+import { getLinkedInStatus, startLinkedInAuth, disconnectLinkedIn, type LinkedInStatus } from "@/lib/linkedin.functions";
 
 export const Route = createFileRoute("/_authenticated/linkedin")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -22,17 +21,27 @@ export const Route = createFileRoute("/_authenticated/linkedin")({
 function LinkedInPage() {
   const { t, lang } = useI18n();
   const search = useSearch({ from: "/_authenticated/linkedin" });
-  const [profile, setProfile] = useState<any>(null);
+  const [status, setStatus] = useState<LinkedInStatus | null>(null);
+  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
+  const getStatus = useServerFn(getLinkedInStatus);
   const start = useServerFn(startLinkedInAuth);
   const disconnect = useServerFn(disconnectLinkedIn);
 
   const load = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const { data } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
-    setProfile(data);
+    setLoading(true);
+    try {
+      const nextStatus = await getStatus();
+      setStatus(nextStatus);
+      if (nextStatus.connected) setLastError(null);
+    } catch (e: any) {
+      const message = e?.message ?? String(e);
+      setLastError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { load(); }, []);
@@ -50,9 +59,10 @@ function LinkedInPage() {
       load();
     }
     if (search.error) {
-      const decoded = decodeURIComponent(search.error);
+      const decoded = search.error;
       setLastError(decoded);
       toast.error("خطأ: " + decoded);
+      setLoading(false);
     }
   }, [search.connected, search.error, lang]);
 
@@ -74,26 +84,27 @@ function LinkedInPage() {
     try {
       await disconnect({ data: undefined });
       toast.success(lang === "ar" ? "تم فك الربط" : "Disconnected");
-      load();
+      await load();
     } catch (e: any) { toast.error(e.message); }
     finally { setBusy(false); }
   };
 
-  const connected = !!profile?.linkedin_connected;
-  const expiresAt = profile?.linkedin_expires_at ? new Date(profile.linkedin_expires_at) : null;
-  const expired = expiresAt && expiresAt < new Date();
+  const connected = !!status?.connected;
+  const expiresAt = status?.expiresAt ? new Date(status.expiresAt) : null;
+  const expired = !!status?.expired;
 
   return (
     <AppShell>
       <div className="mx-auto max-w-2xl space-y-6">
         <h1 className="text-2xl font-bold">{t("li.title")}</h1>
 
-        {/* DEBUG ERROR BOX */}
         {lastError && (
           <div className="rounded-lg border border-red-300 bg-red-50 p-4 flex gap-3">
             <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-red-700 text-sm">خطأ الربط:</p>
+              <p className="font-semibold text-red-700 text-sm">
+                {lang === "ar" ? "تفاصيل مشكلة الربط:" : "Connection issue details:"}
+              </p>
               <p className="text-red-600 text-sm font-mono mt-1 break-all">{lastError}</p>
             </div>
           </div>
@@ -106,11 +117,19 @@ function LinkedInPage() {
             </div>
             <div className="flex-1">
               <p className="font-medium">LinkedIn</p>
-              {connected ? (
+              {loading ? (
+                <Badge variant="outline" className="gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  {lang === "ar" ? "جاري التحقق" : "Checking"}
+                </Badge>
+              ) : connected ? (
                 expired ? (
                   <Badge variant="destructive">{lang === "ar" ? "انتهت الصلاحية" : "Token expired"}</Badge>
                 ) : (
-                  <Badge>{t("dash.connected")}{profile.linkedin_name ? ` · ${profile.linkedin_name}` : ""}</Badge>
+                  <Badge className="gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {t("dash.connected")}{status?.name ? ` · ${status.name}` : ""}
+                  </Badge>
                 )
               ) : (
                 <Badge variant="outline">{t("dash.notconnected")}</Badge>
@@ -151,6 +170,12 @@ function LinkedInPage() {
           {expiresAt && !expired && (
             <p className="mt-3 text-xs text-muted-foreground">
               {lang === "ar" ? "تنتهي الصلاحية:" : "Expires:"} {expiresAt.toLocaleString()}
+            </p>
+          )}
+
+          {connected && status?.syncedAt && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {lang === "ar" ? "آخر مزامنة:" : "Last synced:"} {new Date(status.syncedAt).toLocaleString()}
             </p>
           )}
         </Card>

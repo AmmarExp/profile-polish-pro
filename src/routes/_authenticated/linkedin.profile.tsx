@@ -4,12 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
-import { RefreshCw, Mail, Linkedin, ExternalLink, FileText, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { RefreshCw, Mail, Linkedin, ExternalLink, FileText, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { syncLinkedInProfile } from "@/lib/linkedin.functions";
+import { getLinkedInStatus, syncLinkedInProfile, type LinkedInStatus } from "@/lib/linkedin.functions";
 
 export const Route = createFileRoute("/_authenticated/linkedin/profile")({
   component: LinkedInProfilePage,
@@ -18,27 +17,28 @@ export const Route = createFileRoute("/_authenticated/linkedin/profile")({
 function LinkedInProfilePage() {
   const { lang } = useI18n();
   const ar = lang === "ar";
-  const [profile, setProfile] = useState<any>(null);
+  const [status, setStatus] = useState<LinkedInStatus | null>(null);
   const [stats, setStats] = useState({ published: 0, scheduled: 0, drafts: 0, failed: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const getStatus = useServerFn(getLinkedInStatus);
   const sync = useServerFn(syncLinkedInProfile);
 
   const load = async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const [{ data: p }, { data: posts }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
-      supabase.from("posts").select("status").eq("user_id", u.user.id),
-    ]);
-    setProfile(p);
-    const s = { published: 0, scheduled: 0, drafts: 0, failed: 0 };
-    (posts ?? []).forEach((x: any) => {
-      if (x.status === "published") s.published++;
-      else if (x.status === "scheduled") s.scheduled++;
-      else if (x.status === "failed") s.failed++;
-      else s.drafts++;
-    });
-    setStats(s);
+    setLoading(true);
+    try {
+      const nextStatus = await getStatus();
+      setStatus(nextStatus);
+      setStats(nextStatus.stats);
+      setError(null);
+    } catch (e: any) {
+      const message = e?.message ?? String(e);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
   useEffect(() => { load(); }, []);
   useEffect(() => {
@@ -54,7 +54,34 @@ function LinkedInProfilePage() {
     finally { setBusy(false); }
   };
 
-  if (!profile?.linkedin_connected) {
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-2xl">
+          <Card className="p-8 text-center">
+            <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-[#0A66C2]" />
+            <p className="text-muted-foreground">{ar ? "جاري تحميل بيانات لينكدإن..." : "Loading LinkedIn data..."}</p>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppShell>
+        <div className="mx-auto max-w-2xl">
+          <Card className="p-8 text-center">
+            <AlertCircle className="mx-auto mb-3 h-10 w-10 text-red-600" />
+            <p className="mb-4 text-muted-foreground">{error}</p>
+            <Button onClick={load}>{ar ? "حاول مجدداً" : "Try again"}</Button>
+          </Card>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!status?.connected) {
     return (
       <AppShell>
         <div className="mx-auto max-w-2xl">
@@ -70,8 +97,8 @@ function LinkedInProfilePage() {
     );
   }
 
-  const profileUrl = profile.linkedin_urn
-    ? `https://www.linkedin.com/in/${String(profile.linkedin_urn).replace("urn:li:person:", "")}`
+  const profileUrl = status.urn
+    ? `https://www.linkedin.com/in/${String(status.urn).replace("urn:li:person:", "")}`
     : null;
 
   const cards = [
@@ -94,8 +121,8 @@ function LinkedInProfilePage() {
 
         <Card className="p-6">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            {profile.linkedin_picture ? (
-              <img src={profile.linkedin_picture} alt={profile.linkedin_name ?? ""} className="h-20 w-20 rounded-full object-cover ring-2 ring-[#0A66C2]/20" />
+            {status.picture ? (
+              <img src={status.picture} alt={status.name ?? ""} className="h-20 w-20 rounded-full object-cover ring-2 ring-[#0A66C2]/20" />
             ) : (
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#0A66C2]/10">
                 <Linkedin className="h-8 w-8 text-[#0A66C2]" />
@@ -103,15 +130,15 @@ function LinkedInProfilePage() {
             )}
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-semibold">{profile.linkedin_name ?? "—"}</h2>
+                <h2 className="text-xl font-semibold">{status.name ?? "—"}</h2>
                 <Badge className="bg-[#0A66C2]">{ar ? "متصل" : "Connected"}</Badge>
               </div>
-              {profile.linkedin_headline && (
-                <p className="mt-1 text-sm text-muted-foreground">{profile.linkedin_headline}</p>
+              {status.headline && (
+                <p className="mt-1 text-sm text-muted-foreground">{status.headline}</p>
               )}
-              {profile.linkedin_email && (
+              {status.email && (
                 <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-3.5 w-3.5" /> {profile.linkedin_email}
+                  <Mail className="h-3.5 w-3.5" /> {status.email}
                 </p>
               )}
               {profileUrl && (
@@ -144,9 +171,9 @@ function LinkedInProfilePage() {
           </p>
         </Card>
 
-        {profile.linkedin_synced_at && (
+        {status.syncedAt && (
           <p className="text-center text-xs text-muted-foreground">
-            {ar ? "آخر مزامنة:" : "Last synced:"} {new Date(profile.linkedin_synced_at).toLocaleString()}
+            {ar ? "آخر مزامنة:" : "Last synced:"} {new Date(status.syncedAt).toLocaleString()}
           </p>
         )}
       </div>
