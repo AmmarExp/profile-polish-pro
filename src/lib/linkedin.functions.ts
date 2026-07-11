@@ -16,8 +16,14 @@ export const startLinkedInAuth = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { buildAuthUrl } = await import("./linkedin.server");
     const { supabase, userId } = context;
-    const nonce = crypto.randomUUID() + "." + crypto.randomUUID();
-    const state = nonce;
+    const nonce = crypto.randomUUID().replace(/-/g, "");
+    // Encode the app origin into state so the callback can redirect the
+    // user back to the environment they started from (preview vs production).
+    const originB64 = btoa(data.origin)
+      .replace(/=+$/, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+    const state = `${nonce}.${originB64}`;
     const { error } = await supabase.from("linkedin_oauth_states").insert({ state, user_id: userId });
     if (error) throw error;
     const redirectUri = LINKEDIN_REDIRECT_URI;
