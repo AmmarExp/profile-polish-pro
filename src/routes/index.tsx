@@ -116,17 +116,17 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4">
           <h2 className="text-3xl font-bold md:text-4xl text-center">{t("compare.title")}</h2>
           <p className="mt-3 text-muted-foreground text-center mx-auto max-w-2xl">{t("compare.subtitle")}</p>
-          <div className="mt-10 grid gap-8 md:grid-cols-2 items-center max-w-5xl mx-auto">
+          <div className="mt-10 grid max-w-5xl mx-auto items-center gap-8 md:grid-cols-2">
             <img
               src={heroCompare}
               alt={lang === "ar" ? "الفرق بين بروفايل خامل وبروفايل نشط" : "Quiet profile vs. active profile"}
               width={1024}
               height={1024}
               loading="lazy"
-              className="rounded-2xl shadow-soft w-full h-auto"
+              className="h-auto w-full rounded-2xl shadow-soft"
             />
             <div className="flex items-start gap-4 rounded-2xl bg-background p-5 shadow-soft">
-              <div className="rounded-xl bg-accent/20 p-3 flex-shrink-0">
+              <div className="flex-shrink-0 rounded-xl bg-accent/20 p-3">
                 <TrendingUp className="h-5 w-5 text-accent-foreground" />
               </div>
               <p className="text-sm leading-relaxed">{t("compare.jobs")}</p>
