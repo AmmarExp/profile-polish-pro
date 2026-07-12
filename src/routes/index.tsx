@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
-import heroCompare from "@/assets/hero-compare.jpg";
 import {
   Sparkles,
   Calendar,
@@ -116,21 +115,15 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4">
           <h2 className="text-3xl font-bold md:text-4xl text-center">{t("compare.title")}</h2>
           <p className="mt-3 text-muted-foreground text-center mx-auto max-w-2xl">{t("compare.subtitle")}</p>
-          <div className="mt-10 grid gap-8 md:grid-cols-2 items-center max-w-5xl mx-auto">
+          <div className="mx-auto mt-10 max-w-[900px] overflow-hidden rounded-2xl bg-background shadow-soft">
             <img
-              src={heroCompare}
-              alt={lang === "ar" ? "الفرق بين بروفايل خامل وبروفايل نشط" : "Quiet profile vs. active profile"}
-              width={1024}
-              height={1024}
+              src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2F7f721b7c320a411a9bb7bf957140796d?format=webp&width=800&height=1200"
+              alt={lang === "ar" ? "الفرق بين ملف عادي وملف نشط" : "The difference between a regular and active profile"}
+              width={800}
+              height={1200}
               loading="lazy"
-              className="rounded-2xl shadow-soft w-full h-auto"
+              className="h-auto w-full"
             />
-            <div className="flex items-start gap-4 rounded-2xl bg-background p-5 shadow-soft">
-              <div className="rounded-xl bg-accent/20 p-3 flex-shrink-0">
-                <TrendingUp className="h-5 w-5 text-accent-foreground" />
-              </div>
-              <p className="text-sm leading-relaxed">{t("compare.jobs")}</p>
-            </div>
           </div>
         </div>
       </section>

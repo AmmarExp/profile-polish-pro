@@ -11,7 +11,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { generateLinkedInPost } from "@/lib/ai.functions";
 import { publishPostNow } from "@/lib/linkedin.functions";
 import { toast } from "sonner";
-import { AlertCircle, Loader2, RotateCcw, Save, Send, Sparkles } from "lucide-react";
+import { AlertCircle, Image, Loader2, RotateCcw, Save, Send, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/posts/new")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -41,6 +41,10 @@ function PostComposer() {
   const [content, setContent] = useState("");
   const [postId, setPostId] = useState<string | null>(search.id ?? null);
   const [profile, setProfile] = useState<any>(null);
+  const [includeImage, setIncludeImage] = useState(false);
+  const [imageDescription, setImageDescription] = useState("");
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState(false);
 
   const genFn = useServerFn(generateLinkedInPost);
   const publishFn = useServerFn(publishPostNow);
@@ -131,6 +135,16 @@ function PostComposer() {
     }
   };
 
+  const generateImage = () => {
+    // TODO: call generatePostImage(content, imageDescription)
+    setGeneratingImage(true);
+    setGeneratedImage(false);
+    window.setTimeout(() => {
+      setGeneratingImage(false);
+      setGeneratedImage(true);
+    }, 900);
+  };
+
   const notConnected = profile && !profile.linkedin_connected;
   const chars = content.length;
 
@@ -195,6 +209,14 @@ function PostComposer() {
                 )}
                 <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={10} className="leading-7" />
                 <p className="text-left text-xs text-muted-foreground">{chars} / 3000</p>
+                <section className="rounded-2xl border border-border bg-secondary/30 p-4 sm:p-5">
+                  <div className="flex items-center gap-2"><div className="rounded-xl bg-primary/10 p-2"><Image className="h-5 w-5 text-primary" /></div><h3 className="font-bold">هل تريد توليد صورة للمنشور؟</h3></div>
+                  <div className="mt-4 space-y-3">
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-background"><input type="radio" name="post-image" checked={!includeImage} onChange={() => { setIncludeImage(false); setGeneratedImage(false); }} className="h-4 w-4 accent-primary" />لا، أكتفي بالنص فقط</label>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg p-2 hover:bg-background"><input type="radio" name="post-image" checked={includeImage} onChange={() => setIncludeImage(true)} className="h-4 w-4 accent-primary" />نعم، ولّد صورة مناسبة للمنشور</label>
+                  </div>
+                  {includeImage && <div className="mt-5 space-y-3 border-t border-border pt-5"><div className="space-y-2"><label htmlFor="image-description" className="text-sm font-medium">وصف الصورة (اختياري)</label><Input id="image-description" value={imageDescription} onChange={(event) => setImageDescription(event.target.value)} placeholder="سيتم توليد صورة بناءً على محتوى المنشور تلقائياً" /></div><Button variant="outline" onClick={generateImage} disabled={generatingImage} className="border-primary/50 text-primary hover:bg-primary/10">{generatingImage && <Loader2 className="h-4 w-4 animate-spin" />} ولّد الصورة</Button>{(generatingImage || generatedImage) && <div className="flex h-48 items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5">{generatingImage ? <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground"><Loader2 className="h-7 w-7 animate-spin text-primary" />جارٍ تحضير الصورة...</div> : <div className="flex flex-col items-center gap-2 text-center"><Image className="h-9 w-9 text-primary" /><p className="font-medium">معاينة الصورة التجريبية</p><p className="text-xs text-muted-foreground">ستظهر الصورة المولدة هنا.</p></div>}</div>}</div>}
+                </section>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => setStep(2)}>✏️ عدّل الأسلوب</Button>
                   <Button variant="outline" onClick={generate} disabled={writing}><RotateCcw className="h-4 w-4" /> أعد الكتابة</Button>
