@@ -1,48 +1,77 @@
-## التشخيص
+# Wire UI to real backend
 
-المشكلة ليست من LinkedIn نفسه فقط: قاعدة البيانات تُظهر أن الربط نجح فعلاً لبعض الحسابات (`linkedin_connected = true`) وتم حفظ الاسم والبريد ووقت المزامنة. لكن واجهة `/linkedin` ما زالت تعرض “غير متصل”.
+Connect the existing pages to Supabase + AI without touching any UI/design. AI runs through **Lovable AI Gateway** (`LOVABLE_API_KEY`, model `google/gemini-2.5-flash`) instead of OpenAI — Lovable Cloud does not use `OPENAI_API_KEY`, and the gateway is the sanctioned path (no key setup required, same quality for these tasks). All AI calls stay server-side via `createServerFn`.
 
-الأسباب المحتملة التي سأعالجها في الإصلاح:
+## 1. Migration: `weekly_plans`
 
-1. **اعتماد الواجهة على قراءة مباشرة من المتصفح** لجدول `profiles` بدون عرض الخطأ للمستخدم؛ إذا فشلت القراءة أو رجعت صفاً فارغاً تبقى الصفحة “غير متصل”.
-2. **الربط يبدأ من المعاينة لكن Callback ثابت على رابط النشر**، لذلك يلزم أن يتأكد الكولباك من الرجوع لنفس بيئة المستخدم وتحديث الحالة بوضوح.
-3. **وجود حالات OAuth قديمة كثيرة غير محذوفة** يدل أن بعض محاولات الربط لا تصل لمرحلة الحذف/التحديث بشكل كامل أو لا تعرض سبب الفشل.
-4. **صفحة بيانات LinkedIn لا تعرض حالة تحميل/خطأ**، لذلك تبدو للمستخدم كأن الربط فشل حتى لو كان محفوظاً.
+New migration exactly as specified (table + GRANTs + RLS + own-row policy).
 
-## خطة التنفيذ
+## 2. AI server functions — `src/lib/ai.functions.ts`
 
-### 1. جعل قراءة حالة LinkedIn موثوقة من الخادم
-- إضافة دالة Server Function محمية لجلب حالة LinkedIn الحالية للمستخدم من قاعدة البيانات.
-- سترجع الدالة فقط الحقول الآمنة للواجهة: حالة الربط، الاسم، البريد، الصورة، وقت الانتهاء، وقت آخر مزامنة، وإحصائيات منشورات التطبيق.
-- لن أرجع التوكنات للمتصفح.
+Rewrite/extend the existing file with 5 functions, all `createServerFn` + `requireSupabaseAuth`, all reading `LOVABLE_API_KEY` inside the handler, all Arabic errors:
 
-### 2. تحديث صفحة الربط `/linkedin`
-- استبدال القراءة المباشرة من المتصفح بدالة الخادم الجديدة.
-- إضافة حالات واضحة:
-  - جاري التحقق من الربط.
-  - متصل مع اسم الحساب.
-  - غير متصل.
-  - فشل الربط مع رسالة مفهومة.
-- بعد الرجوع من LinkedIn مع `?connected=1` ستعيد الصفحة تحميل الحالة فوراً بدل الاعتماد على focus فقط.
-- إزالة أي منطق قديم يترك الصفحة على “غير متصل” عند وجود خطأ قراءة.
+- `generateLinkedInPost({ topic, tone, profile })` → string (system prompt as specified, adapted to Lovable AI chat completion body).
+- `generateWeeklyPlan({ profile })` → parsed JSON array of 3 items (`response_format: json_object`, then parse + validate).
+- `improveHeadline({ headline })` → JSON array of 3 `{headline, reason}`.
+- `generateComment({ post })` → JSON array of 3 `{type, comment}`.
+- `improveSummary({ summary })` → string.
 
-### 3. تحديث صفحة بيانات LinkedIn
-- ربطها بنفس دالة الخادم الجديدة.
-- عرض بطاقة بيانات الحساب إذا كان متصلاً.
-- عرض إحصائيات منشورات التطبيق المنشورة/المجدولة/الفاشلة.
-- توضيح أن عدد المتابعين والمشاهدات لا توفره LinkedIn API العامة إلا إذا حصل التطبيق على صلاحيات شراكة/Marketing API، لكن سنعرض ما يمكن جلبه حالياً وما ينشره التطبيق.
+Errors surfaced in Arabic: rate limit (429) → "تم تجاوز حد الاستخدام، حاول لاحقاً"، credits (402) → "انتهت أرصدة الذكاء الاصطناعي"، other → "تعذر توليد المحتوى".
 
-### 4. تقوية Callback الخاص بـ LinkedIn
-- التأكد أن الكولباك يكتب التحديث على صف المستخدم الموجود بدلاً من إنشاء صف ناقص عند الحاجة.
-- حذف حالة OAuth بعد النجاح.
-- عند الفشل، تمرير سبب واضح للواجهة بدل فشل صامت.
-- تنظيف حالات OAuth القديمة تلقائياً أثناء بدء ربط جديد لتقليل الالتباس.
+## 3. `/posts/new` (PostComposer)
 
-### 5. التحقق بعد التنفيذ
-- فحص حالة الحساب المتصل من قاعدة البيانات.
-- تشغيل تحقق سريع للصفحة للتأكد أن `/linkedin` تعرض “متصل” للحساب الذي تم حفظه.
-- التأكد أن التوكنات لا تظهر في المتصفح أو في الواجهة.
+- On mount load `profiles` row for current user (needed for prompt + LinkedIn status).
+- Replace TODO with `generateLinkedInPost` call; show Arabic spinner state.
+- If `?id=` in search → load that post and prefill (edit mode). If `?topic=&tone=` → prefill step 1/2.
+- "احفظ مسودة" → insert/update `posts` with `status='draft'`.
+- "انشر على LinkedIn" → if `linkedin_connected=false` show red banner "ربط حساب LinkedIn مطلوب" linking to `/linkedin`; else call existing `publishPostNow` and toast success.
 
-## ملاحظة مهمة
+## 4. `/posts` (Posts manager)
 
-لا يمكنني اختبار تسجيل دخول LinkedIn كاملاً نيابة عنك لأن الموافقة تتم من حسابك الشخصي، لكن بعد الإصلاح ستكون النتيجة مرئية مباشرة: إذا حفظ الكولباك الربط في قاعدة البيانات ستظهر الصفحة “متصل” فوراً، وإذا فشل سيظهر سبب الفشل بدل “غير متصل” صامت.
+- Replace dummy list with Supabase select filtered by `user_id`, ordered `created_at desc`.
+- Tab counts (all/drafts/scheduled/published/failed) from real rows.
+- "نشر الآن" → `publishPostNow`.
+- "حذف" → AlertDialog confirm → delete row → refetch.
+- "تعديل" → `navigate({ to: '/posts/new', search: { id } })`.
+- "عرض على LinkedIn" → external link using `linkedin_post_id`.
+- Live countdown for scheduled rows via `setInterval(1000)` from `scheduled_at`.
+
+## 5. `/planner`
+
+- Compute current week_start (Saturday, per existing UI).
+- On mount: `select * from weekly_plans where user_id and week_start` and hydrate suggestions.
+- "اقترح خطة هذا الأسبوع" → `generateWeeklyPlan` → upsert into `weekly_plans` (conflict on `user_id, week_start`).
+- Green dot on a day if a post exists in `posts` whose `scheduled_at`/`created_at` falls on that day.
+- "استخدم هذه الفكرة" → navigate to `/posts/new?topic=...&tone=...`.
+
+## 6. `/tools`
+
+- Headline / Comment / Summary tabs each call their AI function on button click, replace static cards with returned data.
+- Each "نسخ" button → `navigator.clipboard.writeText` + inline "تم النسخ ✓" for 1.5s.
+- Arabic loading + error states.
+
+## 7. `/settings`
+
+- Load profile row on mount, populate all fields (remove hard-coded defaults).
+- "حفظ التغييرات" → upsert `profiles`.
+- Completion % = filled fields (full_name, headline, specialty, industry, bio, goal, tone, language) / 8.
+- Toast on save; also persist `schedule_settings` block (posts/day, timezone, times, auto_publish, active).
+
+## 8. `/dashboard`
+
+- Total posts = count from `posts` where `user_id=auth.uid()`.
+- This-week posts = count where `created_at >= start of current week`.
+- LinkedIn badge from `profiles.linkedin_connected`.
+- Recent posts = last 3 by `created_at desc`.
+- Onboarding banner shown only when `headline` or `specialty` is empty.
+
+## Technical notes
+
+- All data reads use `createServerFn` + `requireSupabaseAuth` (or existing browser Supabase client where already used) — no changes to LinkedIn OAuth files.
+- Loader-safe: pages call server fns from components via `useServerFn` + `useQuery` (they live under `_authenticated`, so protected server fns are safe).
+- Search params for `/posts/new` added via route `validateSearch` (`{ id?, topic?, tone? }`).
+- No design/styling changes; only replace TODOs, dummy arrays, and wire handlers.
+
+## Deviation from spec
+
+Using Lovable AI Gateway (`LOVABLE_API_KEY` + `google/gemini-2.5-flash`) instead of OpenAI, since this project is on Lovable Cloud and has no OpenAI key configured. Prompts and return shapes stay exactly as specified.
