@@ -5,30 +5,50 @@ import { z } from "zod";
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MODEL = "google/gemini-2.5-flash";
 
-async function callAI(system: string, user: string): Promise<string> {
+async function callAI(system: string, user: string, opts?: { json?: boolean }): Promise<string> {
   const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("LOVABLE_API_KEY missing");
+  if (!key) throw new Error("مفتاح الذكاء الاصطناعي غير مهيأ");
+  const body: any = {
+    model: MODEL,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+  };
+  if (opts?.json) body.response_format = { type: "json_object" };
+
   const res = await fetch(GATEWAY_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Lovable-API-Key": key,
     },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-    }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`AI gateway ${res.status}: ${body}`);
+    if (res.status === 429) throw new Error("تم تجاوز حد الاستخدام، حاول لاحقاً");
+    if (res.status === 402) throw new Error("انتهت أرصدة الذكاء الاصطناعي");
+    throw new Error("تعذر توليد المحتوى");
   }
   const data = await res.json();
   return data?.choices?.[0]?.message?.content ?? "";
 }
+
+function parseJsonLoose<T>(raw: string): T {
+  const cleaned = raw.replace(/```json|```/g, "").trim();
+  try {
+    return JSON.parse(cleaned) as T;
+  } catch {
+    // try to extract first JSON object/array
+    const match = cleaned.match(/[\[{][\s\S]*[\]}]/);
+    if (match) return JSON.parse(match[0]) as T;
+    throw new Error("تعذر قراءة استجابة الذكاء الاصطناعي");
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+// Legacy: generatePost (used elsewhere) — kept as-is behavior
+// ─────────────────────────────────────────────────────────
 
 const GenerateInput = z.object({
   topic: z.string().max(500).optional().default(""),
@@ -46,7 +66,7 @@ export const generatePost = createServerFn({ method: "POST" })
       .eq("id", userId)
       .maybeSingle();
 
-    if (!profile) throw new Error("Profile not found");
+    if (!profile) throw new Error("الملف الشخصي غير موجود");
 
     const { data: sub } = await supabase
       .from("subscriptions")
@@ -57,11 +77,7 @@ export const generatePost = createServerFn({ method: "POST" })
     const isPro = sub && sub.status === "active" && sub.plan !== "free";
     const trialLeft = (profile.trial_posts_limit ?? 3) - (profile.trial_posts_used ?? 0);
     if (!isPro && trialLeft <= 0) {
-      throw new Error(
-        profile.language === "ar"
-          ? "انتهت المنشورات التجريبية. الرجاء الاشتراك للمتابعة."
-          : "Trial posts exhausted. Please subscribe to continue."
-      );
+      throw new Error("انتهت المنشورات التجريبية. الرجاء الاشتراك للمتابعة.");
     }
 
     const lang = profile.language === "en" ? "English" : "Arabic";
@@ -119,7 +135,7 @@ export const analyzeProfile = createServerFn({ method: "POST" })
       .select("full_name, headline, bio, specialty, industry, goal, language")
       .eq("id", userId)
       .maybeSingle();
-    if (!profile) throw new Error("Profile not found");
+    if (!profile) throw new Error("الملف الشخصي غير موجود");
 
     const lang = profile.language === "en" ? "English" : "Arabic";
     const system = `You are a LinkedIn coach. Return STRICT JSON only, no prose, no markdown, matching:
@@ -133,14 +149,8 @@ Specialty: ${profile.specialty ?? "—"}
 Industry: ${profile.industry ?? "—"}
 Goal: ${profile.goal ?? "—"}`;
 
-    const raw = await callAI(system, userPrompt);
-    const jsonStr = raw.replace(/```json|```/g, "").trim();
-    let parsed: { recommendations: Array<{ category: string; title: string; content: string; priority: number }> };
-    try {
-      parsed = JSON.parse(jsonStr);
-    } catch {
-      throw new Error("AI returned invalid JSON");
-    }
+    const raw = await callAI(system, userPrompt, { json: true });
+    const parsed = parseJsonLoose<{ recommendations: Array<{ category: string; title: string; content: string; priority: number }> }>(raw);
 
     await supabase.from("ai_recommendations").delete().eq("user_id", userId);
     const rows = parsed.recommendations.map((r) => ({
@@ -152,4 +162,123 @@ Goal: ${profile.goal ?? "—"}`;
     }));
     if (rows.length) await supabase.from("ai_recommendations").insert(rows);
     return { count: rows.length };
+  });
+
+// ─────────────────────────────────────────────────────────
+// New per-spec AI functions
+// ─────────────────────────────────────────────────────────
+
+const ProfileShape = z.object({
+  full_name: z.string().nullable().optional(),
+  specialty: z.string().nullable().optional(),
+  industry: z.string().nullable().optional(),
+  goal: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+}).partial();
+
+const GenPostInput = z.object({
+  topic: z.string().min(1).max(500),
+  tone: z.string().min(1).max(60),
+  profile: ProfileShape.optional(),
+});
+
+export const generateLinkedInPost = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => GenPostInput.parse(v))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    let profile = data.profile ?? null;
+    if (!profile) {
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("full_name, specialty, industry, goal, language")
+        .eq("id", userId)
+        .maybeSingle();
+      profile = p ?? {};
+    }
+    const langCode = profile.language === "en" ? "en" : "ar";
+    const language = langCode === "en" ? "English" : "Arabic";
+    const system = `أنت كاتب محتوى محترف متخصص في LinkedIn. اكتب منشوراً احترافياً باللغة ${language === "English" ? "الإنجليزية" : "العربية"}. المستخدم اسمه ${profile.full_name ?? "—"}، تخصصه ${profile.specialty ?? "—"}، قطاعه ${profile.industry ?? "—"}، هدفه ${profile.goal ?? "—"}.
+اكتب بأسلوب ${data.tone}. المنشور يجب أن يكون:
+- بين 150 و 400 كلمة
+- فقرات قصيرة مع مسافات بينها
+- ينتهي بـ 3-5 هاشتاقات ذات صلة
+- لا يبدأ بعبارات مبتذلة مثل 'يسعدني' أو 'بكل سرور'
+- لا يتجاوز 3000 حرف`;
+
+    const content = await callAI(system, `اكتب منشوراً عن: ${data.topic}`);
+    return content.trim();
+  });
+
+const WeeklyInput = z.object({
+  profile: ProfileShape.optional(),
+});
+
+export const generateWeeklyPlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => WeeklyInput.parse(v))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    let profile = data.profile ?? null;
+    if (!profile) {
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("specialty, industry, goal, tone")
+        .eq("id", userId)
+        .maybeSingle();
+      profile = p ?? {};
+    }
+    const system = `أنت مخطط محتوى LinkedIn. اقترح 3 أفكار منشورات لهذا الأسبوع مناسبة لمتخصص في ${profile.specialty ?? "—"} بقطاع ${profile.industry ?? "—"} هدفه ${profile.goal ?? "—"}.
+أعد JSON فقط بهذا الشكل بدون أي نص إضافي:
+{"items":[
+  { "day": "السبت", "topic": "...", "tone": "ملهم" },
+  { "day": "الاثنين", "topic": "...", "tone": "تعليمي" },
+  { "day": "الأربعاء", "topic": "...", "tone": "ودّي" }
+]}`;
+    const raw = await callAI(system, "أعد الخطة الآن.", { json: true });
+    const parsed = parseJsonLoose<{ items: Array<{ day: string; topic: string; tone: string }> }>(raw);
+    const items = Array.isArray(parsed) ? (parsed as any) : parsed.items;
+    return items;
+  });
+
+const HeadlineInput = z.object({ headline: z.string().min(1).max(500) });
+export const improveHeadline = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => HeadlineInput.parse(v))
+  .handler(async ({ data }) => {
+    const system = `أنت خبير في LinkedIn. حسّن العنوان الوظيفي المُعطى واقترح 3 بدائل أفضل.
+أعد JSON فقط بالشكل:
+{"items":[
+  { "headline": "...", "reason": "..." }
+]}`;
+    const raw = await callAI(system, data.headline, { json: true });
+    const parsed = parseJsonLoose<{ items: Array<{ headline: string; reason: string }> }>(raw);
+    return Array.isArray(parsed) ? (parsed as any) : parsed.items;
+  });
+
+const CommentInput = z.object({ post: z.string().min(1).max(4000) });
+export const generateComment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => CommentInput.parse(v))
+  .handler(async ({ data }) => {
+    const system = `أنت مساعد كتابة LinkedIn. اقترح 3 تعليقات احترافية على هذا المنشور: واحد موافق، واحد محايد، واحد مختلف بأدب. كل تعليق أقل من 200 حرف ويُضيف قيمة.
+أعد JSON فقط بالشكل:
+{"items":[
+  { "type": "موافق", "comment": "..." },
+  { "type": "محايد", "comment": "..." },
+  { "type": "مختلف بأدب", "comment": "..." }
+]}`;
+    const raw = await callAI(system, data.post, { json: true });
+    const parsed = parseJsonLoose<{ items: Array<{ type: string; comment: string }> }>(raw);
+    return Array.isArray(parsed) ? (parsed as any) : parsed.items;
+  });
+
+const SummaryInput = z.object({ summary: z.string().min(1).max(4000) });
+export const improveSummary = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((v: unknown) => SummaryInput.parse(v))
+  .handler(async ({ data }) => {
+    const system = `أنت خبير في كتابة ملفات LinkedIn. حسّن هذا الملخص ليكون أكثر إقناعاً وغنياً بالكلمات المفتاحية. أعد النسخة المحسّنة فقط كنص عادي بدون شرح.`;
+    const out = await callAI(system, data.summary);
+    return out.trim();
   });
