@@ -12,6 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ArLinkedinProfileOptimizationRouteImport } from './routes/ar/linkedin-profile-optimization'
+import { Route as ArLinkedinPostSchedulerRouteImport } from './routes/ar/linkedin-post-scheduler'
+import { Route as ArLinkedinContentIdeasRouteImport } from './routes/ar/linkedin-content-ideas'
+import { Route as ArHowToWriteLinkedinPostRouteImport } from './routes/ar/how-to-write-linkedin-post'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedPosts_newRouteImport } from './routes/_authenticated/posts_new'
@@ -40,6 +44,28 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ArLinkedinProfileOptimizationRoute =
+  ArLinkedinProfileOptimizationRouteImport.update({
+    id: '/ar/linkedin-profile-optimization',
+    path: '/ar/linkedin-profile-optimization',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ArLinkedinPostSchedulerRoute = ArLinkedinPostSchedulerRouteImport.update({
+  id: '/ar/linkedin-post-scheduler',
+  path: '/ar/linkedin-post-scheduler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArLinkedinContentIdeasRoute = ArLinkedinContentIdeasRouteImport.update({
+  id: '/ar/linkedin-content-ideas',
+  path: '/ar/linkedin-content-ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArHowToWriteLinkedinPostRoute =
+  ArHowToWriteLinkedinPostRouteImport.update({
+    id: '/ar/how-to-write-linkedin-post',
+    path: '/ar/how-to-write-linkedin-post',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedToolsRoute = AuthenticatedToolsRouteImport.update({
   id: '/tools',
   path: '/tools',
@@ -120,6 +146,10 @@ export interface FileRoutesByFullPath {
   '/posts_new': typeof AuthenticatedPosts_newRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tools': typeof AuthenticatedToolsRoute
+  '/ar/how-to-write-linkedin-post': typeof ArHowToWriteLinkedinPostRoute
+  '/ar/linkedin-content-ideas': typeof ArLinkedinContentIdeasRoute
+  '/ar/linkedin-post-scheduler': typeof ArLinkedinPostSchedulerRoute
+  '/ar/linkedin-profile-optimization': typeof ArLinkedinProfileOptimizationRoute
   '/posts/new': typeof AuthenticatedPostsNewRoute
   '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
@@ -137,6 +167,10 @@ export interface FileRoutesByTo {
   '/posts_new': typeof AuthenticatedPosts_newRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tools': typeof AuthenticatedToolsRoute
+  '/ar/how-to-write-linkedin-post': typeof ArHowToWriteLinkedinPostRoute
+  '/ar/linkedin-content-ideas': typeof ArLinkedinContentIdeasRoute
+  '/ar/linkedin-post-scheduler': typeof ArLinkedinPostSchedulerRoute
+  '/ar/linkedin-profile-optimization': typeof ArLinkedinProfileOptimizationRoute
   '/posts/new': typeof AuthenticatedPostsNewRoute
   '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
@@ -156,6 +190,10 @@ export interface FileRoutesById {
   '/_authenticated/posts_new': typeof AuthenticatedPosts_newRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
+  '/ar/how-to-write-linkedin-post': typeof ArHowToWriteLinkedinPostRoute
+  '/ar/linkedin-content-ideas': typeof ArLinkedinContentIdeasRoute
+  '/ar/linkedin-post-scheduler': typeof ArLinkedinPostSchedulerRoute
+  '/ar/linkedin-profile-optimization': typeof ArLinkedinProfileOptimizationRoute
   '/_authenticated/posts/new': typeof AuthenticatedPostsNewRoute
   '/api/public/cron/publish': typeof ApiPublicCronPublishRoute
   '/api/public/linkedin/callback': typeof ApiPublicLinkedinCallbackRoute
@@ -175,6 +213,10 @@ export interface FileRouteTypes {
     | '/posts_new'
     | '/settings'
     | '/tools'
+    | '/ar/how-to-write-linkedin-post'
+    | '/ar/linkedin-content-ideas'
+    | '/ar/linkedin-post-scheduler'
+    | '/ar/linkedin-profile-optimization'
     | '/posts/new'
     | '/api/public/cron/publish'
     | '/api/public/linkedin/callback'
@@ -192,6 +234,10 @@ export interface FileRouteTypes {
     | '/posts_new'
     | '/settings'
     | '/tools'
+    | '/ar/how-to-write-linkedin-post'
+    | '/ar/linkedin-content-ideas'
+    | '/ar/linkedin-post-scheduler'
+    | '/ar/linkedin-profile-optimization'
     | '/posts/new'
     | '/api/public/cron/publish'
     | '/api/public/linkedin/callback'
@@ -210,6 +256,10 @@ export interface FileRouteTypes {
     | '/_authenticated/posts_new'
     | '/_authenticated/settings'
     | '/_authenticated/tools'
+    | '/ar/how-to-write-linkedin-post'
+    | '/ar/linkedin-content-ideas'
+    | '/ar/linkedin-post-scheduler'
+    | '/ar/linkedin-profile-optimization'
     | '/_authenticated/posts/new'
     | '/api/public/cron/publish'
     | '/api/public/linkedin/callback'
@@ -219,6 +269,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ArHowToWriteLinkedinPostRoute: typeof ArHowToWriteLinkedinPostRoute
+  ArLinkedinContentIdeasRoute: typeof ArLinkedinContentIdeasRoute
+  ArLinkedinPostSchedulerRoute: typeof ArLinkedinPostSchedulerRoute
+  ArLinkedinProfileOptimizationRoute: typeof ArLinkedinProfileOptimizationRoute
   ApiPublicCronPublishRoute: typeof ApiPublicCronPublishRoute
   ApiPublicLinkedinCallbackRoute: typeof ApiPublicLinkedinCallbackRoute
 }
@@ -244,6 +298,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar/linkedin-profile-optimization': {
+      id: '/ar/linkedin-profile-optimization'
+      path: '/ar/linkedin-profile-optimization'
+      fullPath: '/ar/linkedin-profile-optimization'
+      preLoaderRoute: typeof ArLinkedinProfileOptimizationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar/linkedin-post-scheduler': {
+      id: '/ar/linkedin-post-scheduler'
+      path: '/ar/linkedin-post-scheduler'
+      fullPath: '/ar/linkedin-post-scheduler'
+      preLoaderRoute: typeof ArLinkedinPostSchedulerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar/linkedin-content-ideas': {
+      id: '/ar/linkedin-content-ideas'
+      path: '/ar/linkedin-content-ideas'
+      fullPath: '/ar/linkedin-content-ideas'
+      preLoaderRoute: typeof ArLinkedinContentIdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ar/how-to-write-linkedin-post': {
+      id: '/ar/how-to-write-linkedin-post'
+      path: '/ar/how-to-write-linkedin-post'
+      fullPath: '/ar/how-to-write-linkedin-post'
+      preLoaderRoute: typeof ArHowToWriteLinkedinPostRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/tools': {
@@ -384,6 +466,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ArHowToWriteLinkedinPostRoute: ArHowToWriteLinkedinPostRoute,
+  ArLinkedinContentIdeasRoute: ArLinkedinContentIdeasRoute,
+  ArLinkedinPostSchedulerRoute: ArLinkedinPostSchedulerRoute,
+  ArLinkedinProfileOptimizationRoute: ArLinkedinProfileOptimizationRoute,
   ApiPublicCronPublishRoute: ApiPublicCronPublishRoute,
   ApiPublicLinkedinCallbackRoute: ApiPublicLinkedinCallbackRoute,
 }
