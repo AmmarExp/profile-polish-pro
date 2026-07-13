@@ -85,7 +85,7 @@ function PostsPage() {
       <div className="mx-auto max-w-4xl space-y-6" dir="rtl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div><p className="text-sm text-muted-foreground">إدارة المحتوى</p><h1 className="text-2xl font-bold">منشوراتي</h1></div>
-          <Button asChild className="gap-2"><Link to="/posts/new"><FilePlus2 className="h-4 w-4" />كتابة منشور جديد</Link></Button>
+          <Button asChild className="gap-2"><Link to="/posts_new"><FilePlus2 className="h-4 w-4" />كتابة منشور جديد</Link></Button>
         </div>
         <Tabs defaultValue="drafts">
           <TabsList className="grid h-auto w-full grid-cols-4">
@@ -106,7 +106,7 @@ function PostsPage() {
                     kind={key}
                     now={now}
                     onPublish={() => handlePublish(post.id)}
-                    onEdit={() => navigate({ to: "/posts/new", search: { id: post.id } })}
+                    onEdit={() => navigate({ to: "/posts_new", search: { id: post.id } })}
                     onDelete={() => setToDelete(post.id)}
                   />
                 ))
