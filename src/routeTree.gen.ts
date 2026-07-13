@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedToolsRouteImport } from './routes/_authenticated/tools'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedPosts_newRouteImport } from './routes/_authenticated/posts_new'
 import { Route as AuthenticatedPostsRouteImport } from './routes/_authenticated/posts'
 import { Route as AuthenticatedPlannerRouteImport } from './routes/_authenticated/planner'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -47,6 +48,11 @@ const AuthenticatedToolsRoute = AuthenticatedToolsRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPosts_newRoute = AuthenticatedPosts_newRouteImport.update({
+  id: '/posts_new',
+  path: '/posts_new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPostsRoute = AuthenticatedPostsRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/posts': typeof AuthenticatedPostsRouteWithChildren
+  '/posts_new': typeof AuthenticatedPosts_newRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/posts/new': typeof AuthenticatedPostsNewRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/planner': typeof AuthenticatedPlannerRoute
   '/posts': typeof AuthenticatedPostsRouteWithChildren
+  '/posts_new': typeof AuthenticatedPosts_newRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/tools': typeof AuthenticatedToolsRoute
   '/posts/new': typeof AuthenticatedPostsNewRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/planner': typeof AuthenticatedPlannerRoute
   '/_authenticated/posts': typeof AuthenticatedPostsRouteWithChildren
+  '/_authenticated/posts_new': typeof AuthenticatedPosts_newRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/tools': typeof AuthenticatedToolsRoute
   '/_authenticated/posts/new': typeof AuthenticatedPostsNewRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/planner'
     | '/posts'
+    | '/posts_new'
     | '/settings'
     | '/tools'
     | '/posts/new'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/planner'
     | '/posts'
+    | '/posts_new'
     | '/settings'
     | '/tools'
     | '/posts/new'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/planner'
     | '/_authenticated/posts'
+    | '/_authenticated/posts_new'
     | '/_authenticated/settings'
     | '/_authenticated/tools'
     | '/_authenticated/posts/new'
@@ -246,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/posts_new': {
+      id: '/_authenticated/posts_new'
+      path: '/posts_new'
+      fullPath: '/posts_new'
+      preLoaderRoute: typeof AuthenticatedPosts_newRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/posts': {
@@ -340,6 +359,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlannerRoute: typeof AuthenticatedPlannerRoute
   AuthenticatedPostsRoute: typeof AuthenticatedPostsRouteWithChildren
+  AuthenticatedPosts_newRoute: typeof AuthenticatedPosts_newRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedToolsRoute: typeof AuthenticatedToolsRoute
 }
@@ -352,6 +372,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlannerRoute: AuthenticatedPlannerRoute,
   AuthenticatedPostsRoute: AuthenticatedPostsRouteWithChildren,
+  AuthenticatedPosts_newRoute: AuthenticatedPosts_newRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedToolsRoute: AuthenticatedToolsRoute,
 }
@@ -369,3 +390,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
