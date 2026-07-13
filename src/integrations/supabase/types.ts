@@ -47,6 +47,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       linkedin_oauth_states: {
         Row: {
           created_at: string
@@ -121,6 +139,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          disabled: boolean
           full_name: string | null
           goal: string | null
           headline: string | null
@@ -148,6 +167,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          disabled?: boolean
           full_name?: string | null
           goal?: string | null
           headline?: string | null
@@ -175,6 +195,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          disabled?: boolean
           full_name?: string | null
           goal?: string | null
           headline?: string | null
@@ -302,6 +323,30 @@ export type Database = {
           status?: Database["public"]["Enums"]["sub_status"]
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      tone_prompts: {
+        Row: {
+          id: string
+          system_prompt: string
+          tone: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          system_prompt?: string
+          tone: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          system_prompt?: string
+          tone?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
