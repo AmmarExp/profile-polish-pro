@@ -89,8 +89,6 @@ export const startLinkedInAuth = createServerFn({ method: "POST" })
       .eq("user_id", userId);
 
     const nonce = crypto.randomUUID().replace(/-/g, "");
-    // Encode the app origin into state so the callback can redirect the
-    // user back to the environment they started from (preview vs production).
     const originB64 = btoa(originUrl.origin)
       .replace(/=+$/, "")
       .replace(/\+/g, "-")
@@ -130,7 +128,9 @@ export const syncLinkedInProfile = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
     const { fetchUserInfo } = await import("./linkedin.server");
-    const { data: p } = await supabase
+    // Use supabaseAdmin to reliably read the sensitive token column
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: p } = await supabaseAdmin
       .from("profiles")
       .select("linkedin_access_token, linkedin_expires_at")
       .eq("id", userId)
@@ -163,24 +163,39 @@ export const publishPostNow = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const { publishUgcPost } = await import("./linkedin.server");
 
-    const { data: profile } = await supabase
+    // Use supabaseAdmin to bypass RLS and reliably read the LinkedIn access token
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("linkedin_access_token, linkedin_urn, linkedin_expires_at")
       .eq("id", userId)
       .maybeSingle();
-    if (!profile?.linkedin_access_token || !profile.linkedin_urn) {
-      throw new Error("LinkedIn is not connected");
-    }
-    if (profile.linkedin_expires_at && new Date(profile.linkedin_expires_at) < new Date()) {
-      throw new Error("LinkedIn token expired — please reconnect");
+
+    if (profileError) {
+      console.error("[publishPostNow] profile read error:", profileError);
+      throw new Error("تعذّر قراءة بيانات الحساب — حاول مجدداً");
     }
 
-    const { data: post } = await supabase
+    if (!profile?.linkedin_access_token || !profile.linkedin_urn) {
+      throw new Error("حساب LinkedIn غير مرتبط — يرجى ربط الحساب أولاً");
+    }
+
+    if (profile.linkedin_expires_at && new Date(profile.linkedin_expires_at) < new Date()) {
+      throw new Error("انتهت صلاحية حساب LinkedIn — يرجى إعادة الربط");
+    }
+
+    const { data: post, error: postError } = await supabase
       .from("posts")
       .select("id, content, user_id")
       .eq("id", data.postId)
       .maybeSingle();
-    if (!post || post.user_id !== userId) throw new Error("Post not found");
+
+    if (postError) {
+      console.error("[publishPostNow] post read error:", postError);
+      throw new Error("تعذّر قراءة المنشور — حاول مجدداً");
+    }
+
+    if (!post || post.user_id !== userId) throw new Error("المنشور غير موجود");
 
     try {
       const liId = await publishUgcPost(profile.linkedin_access_token, profile.linkedin_urn, post.content);
@@ -195,10 +210,18 @@ export const publishPostNow = createServerFn({ method: "POST" })
         .eq("id", post.id);
       return { ok: true, linkedin_post_id: liId };
     } catch (e: any) {
+      console.error("[publishPostNow] LinkedIn publish error:", e);
+      const msg = typeof e?.message === "string" ? e.message : String(e);
+      const friendlyMsg =
+        msg.includes("401") || msg.toLowerCase().includes("unauthorized") || msg.toLowerCase().includes("token")
+          ? "انتهت صلاحية حساب LinkedIn — يرجى إعادة الربط"
+          : msg.includes("403")
+          ? "ليس لديك صلاحية النشر — تحقق من إعدادات تطبيق LinkedIn"
+          : "فشل النشر على LinkedIn — حاول مجدداً";
       await supabase
         .from("posts")
-        .update({ status: "failed", error_message: String(e?.message ?? e) })
+        .update({ status: "failed", error_message: msg })
         .eq("id", post.id);
-      throw e;
+      throw new Error(friendlyMsg);
     }
   });
