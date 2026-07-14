@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -18,7 +18,7 @@ export function LinkedInGuidePage({ eyebrow, title, description, sections }: Lin
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary shadow-soft"><Zap className="h-5 w-5 text-primary-foreground" /></span><span className="text-lg font-bold">ReachLink</span></Link>
+          <Link to="/" className="flex items-center gap-2"><img src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2Fb7cab537912b481c8b9aca0820f138bb?format=webp&width=800&height=1200" alt="شعار لينك بوست" className="h-9 w-9 rounded-xl object-contain" /><span className="text-lg font-bold">LinkPost</span></Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex"><Link to="/" hash="features">المزايا</Link><Link to="/" hash="how">كيف يعمل</Link><Link to="/" hash="pricing">الأسعار</Link></nav>
           <div className="flex items-center gap-2"><LanguageSwitcher /><Link to="/auth"><Button size="sm" className="bg-gradient-primary shadow-soft">ابدأ مجانًا</Button></Link></div>
         </div>
@@ -26,7 +26,7 @@ export function LinkedInGuidePage({ eyebrow, title, description, sections }: Lin
 
       <main>
         <section className="bg-gradient-hero px-4 py-20 md:py-28">
-          <div className="mx-auto max-w-4xl text-center"><p className="font-semibold text-primary">{eyebrow}</p><h1 className="mt-4 text-4xl font-extrabold leading-tight md:text-6xl">{title}</h1><p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">{description}</p><Link to="/auth" className="mt-8 inline-block"><Button size="lg" className="min-h-12 bg-gradient-primary px-7 shadow-soft">جرّب ReachLink مجانًا <ArrowRight className="ms-2 inline h-4 w-4" /></Button></Link></div>
+          <div className="mx-auto max-w-4xl text-center"><p className="font-semibold text-primary">{eyebrow}</p><h1 className="mt-4 text-4xl font-extrabold leading-tight md:text-6xl">{title}</h1><p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">{description}</p><Link to="/auth" className="mt-8 inline-block"><Button size="lg" className="min-h-12 bg-gradient-primary px-7 shadow-soft">جرّب لينك بوست مجانًا <ArrowRight className="ms-2 inline h-4 w-4" /></Button></Link></div>
         </section>
 
         <article className="mx-auto max-w-4xl px-4 py-16">
@@ -35,7 +35,7 @@ export function LinkedInGuidePage({ eyebrow, title, description, sections }: Lin
         </article>
       </main>
 
-      <footer className="border-t border-border/60 py-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground md:flex-row"><Link to="/" className="font-semibold text-foreground">ReachLink</Link><div className="flex flex-wrap justify-center gap-4"><Link to="/ar/how-to-write-linkedin-post">كتابة المنشورات</Link><Link to="/ar/linkedin-profile-optimization">تحسين الملف</Link><Link to="/ar/linkedin-content-ideas">أفكار المحتوى</Link><Link to="/ar/linkedin-post-scheduler">الجدولة</Link></div></div></footer>
+      <footer className="border-t border-border/60 py-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground md:flex-row"><Link to="/" className="font-semibold text-foreground">لينك بوست</Link><div className="flex flex-wrap justify-center gap-4"><Link to="/ar/how-to-write-linkedin-post">كتابة المنشورات</Link><Link to="/ar/linkedin-profile-optimization">تحسين الملف</Link><Link to="/ar/linkedin-content-ideas">أفكار المحتوى</Link><Link to="/ar/linkedin-post-scheduler">الجدولة</Link></div></div></footer>
     </div>
   );
 }

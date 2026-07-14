@@ -169,7 +169,7 @@ function PostComposer() {
     if (!generatedImageUrl) return;
     const a = document.createElement("a");
     a.href = generatedImageUrl;
-    a.download = `reachlink-image-${Date.now()}.png`;
+    a.download = `linkpost-image-${Date.now()}.png`;
     document.body.appendChild(a); a.click(); a.remove();
   };
 
