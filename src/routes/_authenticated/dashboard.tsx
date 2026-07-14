@@ -75,12 +75,12 @@ function Dashboard() {
         <section className="grid gap-3 sm:grid-cols-3">
           <Card className="p-4 shadow-soft"><p className="text-sm text-muted-foreground">إجمالي المنشورات</p><p className="mt-2 text-3xl font-bold">{loading ? "…" : total}</p></Card>
           <Card className="p-4 shadow-soft"><p className="text-sm text-muted-foreground">منشورات هذا الأسبوع</p><p className="mt-2 text-3xl font-bold">{loading ? "…" : weekCount}</p></Card>
-          <Card className="p-4 shadow-soft"><p className="text-sm text-muted-foreground">حالة LinkedIn</p>{linkedInConnected ? <Badge className="mt-3 bg-emerald-600 hover:bg-emerald-600">متصل ✅</Badge> : <Badge className="mt-3 bg-muted text-foreground">غير متصل</Badge>}</Card>
+          <Card className="p-4 shadow-soft"><p className="text-sm text-muted-foreground">حالة LinkedIn</p>{linkedInConnected ? <Badge className="mt-3 bg-emerald-600 hover:bg-emerald-600">متصل</Badge> : <Badge className="mt-3 bg-amber-600 hover:bg-amber-600">غير متصل</Badge>}</Card>
         </section>
 
         {showOnboard && (
           <section className="flex flex-col gap-4 rounded-2xl border border-amber-300/70 bg-amber-100/70 p-5 sm:flex-row sm:items-center sm:justify-between dark:bg-amber-500/10">
-            <div><h2 className="font-bold">أكمل ملفك الشخصي لتحسين جودة المحتوى</h2><p className="mt-1 text-sm text-muted-foreground">أضف خبراتك وأهدافك ليصبح المحتوى أقرب إلى أسلوبك.</p></div>
+            <div><h2 className="font-bold">أكمل ملفك الشخصي لتحسين جودة المحتوى</h2><p className="mt-1 text-sm text-muted-foreground">أضف خبراتك وأهدافك لتحسين جودة المحتوى المولد</p></div>
             <Button asChild variant="outline" className="border-amber-400 bg-background"><Link to="/settings">إكمال الملف</Link></Button>
           </section>
         )}
@@ -92,7 +92,7 @@ function Dashboard() {
         </section>
 
         <section>
-          <div className="mb-3 flex items-center justify-between"><h2 className="text-xl font-bold">آخر المنشورات</h2><Button asChild variant="ghost" size="sm"><Link to="/posts">عرض الكل</Link></Button></div>
+          <div className="mb-3 flex items-center justify-between"><h2 className="text-xl font-bold">آخر المنشورات</h2><Button asChild variant="ghost" size="sm"><Link to="/posts">عرض الجميع</Link></Button></div>
           {recent.length === 0 ? (
             <Card className="p-8 text-center text-sm text-muted-foreground">{loading ? "جارٍ التحميل…" : "لا توجد منشورات بعد."}</Card>
           ) : (
@@ -115,5 +115,5 @@ function Dashboard() {
 }
 
 function QuickAction({ to, icon, title, subtitle }: { to: "/posts/new" | "/planner" | "/tools"; icon: React.ReactNode; title: string; subtitle: string }) {
-  return <Link to={to} className="group"><Card className="h-full p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft"><div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">{icon}</div><h3 className="font-bold">{title}</h3><p className="mt-1 text-sm text-muted-foreground">{subtitle}</p><span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary">ابدأ الآن <Sparkles className="h-3.5 w-3.5" /></span></Card></Link>;
+  return <Link to={to} className="group"><Card className="h-full p-5 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-soft"><div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary transition group-hover:scale-110">{icon}</div><h3 className="font-semibold">{title}</h3><p className="text-sm text-muted-foreground">{subtitle}</p></Card></Link>;
 }
