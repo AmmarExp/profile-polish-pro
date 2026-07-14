@@ -36,9 +36,9 @@ function ToolsPage() {
         </header>
         <Tabs defaultValue="headline">
           <TabsList className="grid h-auto w-full grid-cols-3">
-            <TabsTrigger value="headline">محسّن الـ Headline</TabsTrigger>
-            <TabsTrigger value="comment">مساعد التعليق</TabsTrigger>
-            <TabsTrigger value="summary">محسّن الملخص</TabsTrigger>
+            <TabsTrigger value="headline">محسّن العنوان</TabsTrigger>
+            <TabsTrigger value="comment">مساعد الرد والتعليق</TabsTrigger>
+            <TabsTrigger value="summary">محسّن الملخص الشخصي</TabsTrigger>
           </TabsList>
           <TabsContent value="headline" className="pt-3"><HeadlineTool /></TabsContent>
           <TabsContent value="comment" className="pt-3"><CommentTool /></TabsContent>
@@ -72,19 +72,28 @@ function HeadlineTool() {
   return (
     <div className="space-y-4">
       <Card className="space-y-4 p-5">
-        <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="الصق عنوانك الحالي على LinkedIn" rows={5} />
+        <div>
+          <p className="mb-2 text-sm font-semibold">ماذا يفعل هذا الأداة؟</p>
+          <p className="text-sm text-muted-foreground">هذه الأداة تساعدك على تحسين العنوان الخاص بك على LinkedIn لجعله أكثر جاذبية واحترافية. سيتم اقتراح عناوين بديلة مع شرح سبب تحسن كل واحد.</p>
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold">الصق عنوانك الحالي على LinkedIn</label>
+          <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="مثال: مهندس برمجيات في شركة التقنية" rows={5} />
+        </div>
         <Button onClick={run} disabled={busy} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}حسّن العنوان ✨</Button>
       </Card>
       <div className="grid gap-3">
         {results.map((r, i) => (
           <Card key={i} className="p-4">
             <div className="flex items-start justify-between gap-3">
-              <h3 className="font-semibold">{r.headline}</h3>
-              <Button size="sm" variant="outline" className="gap-1" onClick={() => copy(`h-${i}`, r.headline)}>
-                <Copy className="h-3.5 w-3.5" />{copiedId === `h-${i}` ? "تم النسخ ✓" : "نسخ"}
+              <div className="flex-1">
+                <h3 className="font-semibold text-base">{r.headline}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{r.reason}</p>
+              </div>
+              <Button size="sm" variant="outline" className="gap-1 shrink-0" onClick={() => copy(`h-${i}`, r.headline)}>
+                <Copy className="h-3.5 w-3.5" />{copiedId === `h-${i}` ? "تم ✓" : "نسخ"}
               </Button>
             </div>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">{r.reason}</p>
           </Card>
         ))}
       </div>
@@ -115,19 +124,28 @@ function CommentTool() {
   return (
     <div className="space-y-4">
       <Card className="space-y-4 p-5">
-        <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="الصق المنشور الذي تريد التعليق عليه" rows={5} />
-        <Button onClick={run} disabled={busy} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}اقترح تعليقاً ✨</Button>
+        <div>
+          <p className="mb-2 text-sm font-semibold">ماذا تفعل هذه الأداة؟</p>
+          <p className="text-sm text-muted-foreground">هذه الأداة تساعدك على كتابة تعليقات واستجابات ذكية وجذابة على منشورات الآخرين. ستقترح عليك عدة خيارات للتعليق بأساليب مختلفة.</p>
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold">الصق المنشور الذي تريد الرد عليه</label>
+          <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="الصق المنشور هنا..." rows={5} />
+        </div>
+        <Button onClick={run} disabled={busy} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}اقترح ردود ✨</Button>
       </Card>
       <div className="grid gap-3 md:grid-cols-3">
         {results.map((r, i) => (
           <Card key={i} className="p-4">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-semibold">{r.type}</h3>
-              <Button size="sm" variant="outline" className="gap-1" onClick={() => copy(`c-${i}`, r.comment)}>
-                <Copy className="h-3.5 w-3.5" />{copiedId === `c-${i}` ? "تم النسخ ✓" : "نسخ"}
-              </Button>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm">{r.type}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{r.comment}</p>
+              </div>
             </div>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">{r.comment}</p>
+            <Button size="sm" variant="outline" className="mt-3 w-full gap-1" onClick={() => copy(`c-${i}`, r.comment)}>
+              <Copy className="h-3.5 w-3.5" />{copiedId === `c-${i}` ? "تم ✓" : "نسخ"}
+            </Button>
           </Card>
         ))}
       </div>
@@ -158,18 +176,25 @@ function SummaryTool() {
   return (
     <div className="space-y-4">
       <Card className="space-y-4 p-5">
-        <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="الصق ملخصك الحالي أو اكتب نبذة مختصرة" rows={5} />
+        <div>
+          <p className="mb-2 text-sm font-semibold">ماذا تفعل هذه الأداة؟</p>
+          <p className="text-sm text-muted-foreground">هذه الأداة تساعدك على تحسين الملخص الشخصي (About Section) الخاص بك على LinkedIn. سيتم إعادة صياغة النص ليكون أكثر احترافية وتأثيراً.</p>
+        </div>
+        <div>
+          <label className="mb-2 block text-sm font-semibold">ملخصك الشخصي الحالي على LinkedIn</label>
+          <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="الصق ملخصك الحالي أو اكتب نبذة مختصرة عن نفسك..." rows={5} />
+        </div>
         <Button onClick={run} disabled={busy} className="gap-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}حسّن الملخص ✨</Button>
       </Card>
       {improved && (
         <>
           <div className="grid gap-3 md:grid-cols-2">
             <Card className="p-5">
-              <p className="mb-3 text-sm font-semibold text-muted-foreground">قبل</p>
+              <p className="mb-3 text-sm font-semibold text-muted-foreground">النسخة الأصلية</p>
               <p className="text-sm leading-7">{text}</p>
             </Card>
             <Card className="border-primary/30 bg-primary/5 p-5">
-              <p className="mb-3 text-sm font-semibold text-primary">بعد</p>
+              <p className="mb-3 text-sm font-semibold text-primary">النسخة المحسّنة</p>
               <p className="text-sm leading-7 whitespace-pre-wrap">{improved}</p>
             </Card>
           </div>
