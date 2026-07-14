@@ -94,7 +94,7 @@ function Landing() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2">
             <img src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2Fb7cab537912b481c8b9aca0820f138bb?format=webp&width=800&height=1200" alt="شعار لينك بوست" className="h-9 w-9 rounded-xl object-contain" />
-            <span className="text-lg font-bold tracking-tight">لينك بوست</span>
+            <span className="text-lg font-bold tracking-tight">LinkPost</span>
           </Link>
           <nav className="hidden items-center gap-6 md:flex" aria-label="التنقل الرئيسي">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground">المزايا</a>

@@ -44,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex h-14 items-center justify-between border-b border-border bg-background px-4 md:hidden">
         <Link to="/dashboard" className="flex items-center gap-2">
           <img src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2Fb7cab537912b481c8b9aca0820f138bb?format=webp&width=800&height=1200" alt="شعار لينك بوست" className="h-8 w-8 rounded-lg object-contain" />
-          <span className="font-bold">لينك بوست</span>
+          <span className="font-bold">LinkPost</span>
         </Link>
         <Button size="icon" variant="ghost" onClick={() => setOpen(!open)}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           <div className="hidden h-16 items-center gap-2 border-b border-border px-5 md:flex">
             <img src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2Fb7cab537912b481c8b9aca0820f138bb?format=webp&width=800&height=1200" alt="شعار لينك بوست" className="h-8 w-8 rounded-lg object-contain" />
-            <span className="font-bold">لينك بوست</span>
+            <span className="font-bold">LinkPost</span>
           </div>
           <nav className="flex flex-col gap-1 p-3">
             {items.map(({ to, icon: Icon, label }) => {
