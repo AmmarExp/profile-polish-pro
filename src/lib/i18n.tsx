@@ -33,7 +33,7 @@ export const dict: Dict = {
   "hero.cta2": { ar: "شاهد كيف يعمل", en: "See how it works" },
 
   // Features
-  "feat.title": { ar: "لماذا ريتش لينك؟", en: "Why ReachLink?" },
+  "feat.title": { ar: "لماذا لينك بوست؟", en: "Why LinkPost?" },
   "feat.subtitle": {
     ar: "كل ما تحتاجه لتبني علامتك المهنية على لينكدإن — بذكاء صناعي عربي/إنجليزي.",
     en: "Everything you need to build your professional brand on LinkedIn — in Arabic or English.",

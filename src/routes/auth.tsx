@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card";
 import { useI18n } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { toast } from "sonner";
-import { Zap } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -56,10 +55,8 @@ function AuthPage() {
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary">
-              <Zap className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold">ReachLink</span>
+            <img src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2Fb7cab537912b481c8b9aca0820f138bb?format=webp&width=800&height=1200" alt="شعار لينك بوست" className="h-9 w-9 rounded-xl object-contain" />
+            <span className="font-bold">لينك بوست</span>
           </Link>
           <LanguageSwitcher />
         </div>

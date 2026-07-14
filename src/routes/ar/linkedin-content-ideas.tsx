@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LinkedInGuidePage } from "@/components/LinkedInGuidePage";
 
 export const Route = createFileRoute("/ar/linkedin-content-ideas")({
-  head: () => ({ meta: [{ title: "أفكار محتوى لينكدإن عربي وإنجليزي | ReachLink" }, { name: "description", content: "أفكار عملية لمنشورات لينكدإن تساعدك على مشاركة خبرتك وبناء علامة شخصية في الخليج." }] }),
+  head: () => ({ meta: [{ title: "أفكار محتوى لينكدإن عربي وإنجليزي | لينك بوست" }, { name: "description", content: "أفكار عملية لمنشورات لينكدإن تساعدك على مشاركة خبرتك وبناء علامة شخصية في الخليج." }] }),
   component: LinkedInContentIdeas,
 });
 

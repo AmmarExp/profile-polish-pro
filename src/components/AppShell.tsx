@@ -15,7 +15,6 @@ import {
   Settings as SettingsIcon,
   Wrench,
   X,
-  Zap,
 } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -44,10 +43,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Top bar mobile */}
       <div className="flex h-14 items-center justify-between border-b border-border bg-background px-4 md:hidden">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-            <Zap className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="font-bold">ReachLink</span>
+          <img src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2Fb7cab537912b481c8b9aca0820f138bb?format=webp&width=800&height=1200" alt="شعار لينك بوست" className="h-8 w-8 rounded-lg object-contain" />
+          <span className="font-bold">لينك بوست</span>
         </Link>
         <Button size="icon" variant="ghost" onClick={() => setOpen(!open)}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -62,10 +59,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           } fixed inset-x-0 top-14 z-40 border-b border-border bg-background md:sticky md:top-0 md:block md:h-screen md:w-64 md:border-e md:border-b-0`}
         >
           <div className="hidden h-16 items-center gap-2 border-b border-border px-5 md:flex">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-              <Zap className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold">ReachLink</span>
+            <img src="https://cdn.builder.io/api/v1/image/assets%2F346e6505607b4f3892f8a2e9c5da6d92%2Fb7cab537912b481c8b9aca0820f138bb?format=webp&width=800&height=1200" alt="شعار لينك بوست" className="h-8 w-8 rounded-lg object-contain" />
+            <span className="font-bold">لينك بوست</span>
           </div>
           <nav className="flex flex-col gap-1 p-3">
             {items.map(({ to, icon: Icon, label }) => {
