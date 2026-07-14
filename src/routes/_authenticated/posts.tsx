@@ -85,7 +85,7 @@ function PostsPage() {
       <div className="mx-auto max-w-4xl space-y-6" dir="rtl">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div><p className="text-sm text-muted-foreground">إدارة المحتوى</p><h1 className="text-2xl font-bold">منشوراتي</h1></div>
-          <Button asChild className="gap-2"><Link to="/posts_new"><FilePlus2 className="h-4 w-4" />كتابة منشور جديد</Link></Button>
+          <Button asChild className="gap-2"><Link to="/posts/new"><FilePlus2 className="h-4 w-4" />كتابة منشور جديد</Link></Button>
         </div>
         <Tabs defaultValue="drafts">
           <TabsList className="grid h-auto w-full grid-cols-4">
@@ -106,7 +106,7 @@ function PostsPage() {
                     kind={key}
                     now={now}
                     onPublish={() => handlePublish(post.id)}
-                    onEdit={() => navigate({ to: "/posts_new", search: { id: post.id } })}
+                    onEdit={() => navigate({ to: "/posts/new", search: { id: post.id } })}
                     onDelete={() => setToDelete(post.id)}
                   />
                 ))
@@ -159,7 +159,7 @@ function PostCard({ post, kind, now, onPublish, onEdit, onDelete }: { post: Post
       <p className="line-clamp-3 text-sm leading-7">{post.content}</p>
       {kind === "failed" && post.error_message && <p className="mt-3 text-sm text-destructive">{post.error_message}</p>}
       {kind === "published" && post.linkedin_post_id && (
-        <a href={`https://www.linkedin.com/feed/update/${post.linkedin_post_id}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[#0A66C2]">
+        <a href={`https://www.linkedin.com/feed/update/${post.linkedin_post_id}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
           عرض على LinkedIn <ExternalLink className="h-3.5 w-3.5" />
         </a>
       )}
@@ -175,5 +175,5 @@ function PostCard({ post, kind, now, onPublish, onEdit, onDelete }: { post: Post
 }
 
 function EmptyState() {
-  return <Card className="p-12 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-2xl">📝</div><p className="font-medium">لا توجد منشورات هنا بعد</p><p className="mt-1 text-sm text-muted-foreground">ابدأ بكتابة منشورك التالي.</p></Card>;
+  return <Card className="p-12 text-center"><div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-2xl">📝</div><p className="font-medium">لا توجد منشورات في هذه الفئة</p><p className="text-sm text-muted-foreground">ابدأ بكتابة منشور جديد لإضافته إلى هنا</p></Card>;
 }
